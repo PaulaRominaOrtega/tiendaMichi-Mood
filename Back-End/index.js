@@ -11,6 +11,8 @@ const productoRoutes = require("./routes/productos.routes");
 const categoriasRoutes = require("./routes/categorias.routes");
 const clienteRoutes = require("./routes/clientes.routes");
 const pedidoRoutes = require("./routes/pedidos.routes"); 
+const chatRoutes = require('./routes/chat.routes.js');
+const authRoutes = require("./routes/auth.routes"); // <-- 1. IMPORTA LAS RUTAS
 
 const PORT = process.env.PORT || 3000;
 
@@ -38,14 +40,16 @@ app.get("/health", (req, res) => {
   });
 });
 
-//router de productos
+// router de productos
 app.use("/api/productos", productoRoutes);
-//router de categorías
+// router de categorías
 app.use("/api/categorias", categoriasRoutes);
 // router de clientes
 app.use("/api/clientes", clienteRoutes);
-//router de pedidos
+// router de pedidos
 app.use("/api/pedidos", pedidoRoutes); 
+app.use('/api', chatRoutes);
+app.use('/api/auth', authRoutes); 
 
 app.use(notFound);
 app.use(errorHandler);
@@ -72,6 +76,7 @@ const startServer = async () => {
     console.log(`📖 API Categorias: http://localhost:${PORT}/api/categorias`);
     console.log(`📖 API Clientes: http://localhost:${PORT}/api/clientes`);
     console.log(`📖 API Pedidos: http://localhost:${PORT}/api/pedidos`); 
+    console.log(`🔐 API Autenticación: http://localhost:${PORT}/api/auth`);
   });
 };
 

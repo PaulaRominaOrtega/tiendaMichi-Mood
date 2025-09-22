@@ -1,3 +1,4 @@
+// src/models/Producto.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
@@ -22,6 +23,21 @@ const Producto = sequelize.define(
     descripcion: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    material: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "Material principal del producto, ej: cerámica, plástico, tela."
+    },
+    capacidad: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "Capacidad o tamaño del producto, ej: 350 ml, 1 litro, S, M, L."
+    },
+    caracteristicas_especiales: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "Características adicionales, ej: apto para microondas, antideslizante."
     },
     stock: {
       type: DataTypes.INTEGER,

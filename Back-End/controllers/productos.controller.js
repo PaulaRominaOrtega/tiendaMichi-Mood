@@ -105,6 +105,9 @@ const createProducto = async (req, res) => {
       descuento,
       idAdministrador,
       idCategoria,
+      material,
+      capacidad,
+      caracteristicas_especiales
     } = req.body;
 
     const nuevoProducto = await Producto.create({
@@ -118,6 +121,10 @@ const createProducto = async (req, res) => {
       idAdministrador,
       idCategoria,
       activo: true,
+      // Se pasan los nuevos campos al modelo
+      material,
+      capacidad,
+      caracteristicas_especiales
     });
 
     res.status(201).json({

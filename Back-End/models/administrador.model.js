@@ -15,11 +15,11 @@ const Administrador = sequelize.define('Administrador', {
   },
   contrasena: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   activa: {
     type: DataTypes.BOOLEAN,

@@ -1,6 +1,6 @@
 // src/Admin/pages/ProductCrud.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axiosConfig';
 import ProductForm from '../components/ProductForm';
 import { Link } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ const ProductCrud = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/productos');
+      const response = await api.get('/productos'); // Usamos 'api' en lugar de 'axios'
       setProducts(response.data.data); 
       setIsFormVisible(false);
     } catch (error) {
@@ -26,7 +26,7 @@ const ProductCrud = () => {
   const handleDelete = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/productos/${productId}`);
+        await api.delete(`/productos/${productId}`); // Usamos 'api' en lugar de 'axios'
         fetchProducts();
       } catch (error) {
         console.error("Error deleting product:", error);
