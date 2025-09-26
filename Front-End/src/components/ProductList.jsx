@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
@@ -42,9 +43,10 @@ const ProductList = () => {
       >
         {products.map((product) => (
           <Card key={product.id} sx={{ height: "100%" }}>
+            <Link to={`/producto/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <CardMedia
               component="img"
-              image={product.imagen || "/images/default.jpg"}
+              image={product.imagen ? `http://localhost:3000/uploads/${product.imagen}` : "/images/default.jpg"}
               alt={product.nombre}
               sx={{ height: 200, objectFit: "cover" }}
             />
@@ -61,6 +63,7 @@ const ProductList = () => {
                 {product.stock > 0 ? `Stock: ${product.stock}` : "Sin stock"}
               </Typography>
             </CardContent>
+            </Link>
             <CardActions>
               <Button size="small" variant="contained" color="primary">
                 Agregar al carrito

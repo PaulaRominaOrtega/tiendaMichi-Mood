@@ -1,5 +1,7 @@
 const { Producto, Categoria, Administrador } = require("../models/index.model");
 const { validationResult } = require("express-validator");
+const path = require('path');
+const fs = require('fs');
 
 // Obtener todos los productos
 const getProductos = async (req, res) => {
@@ -100,7 +102,6 @@ const createProducto = async (req, res) => {
       precio,
       descripcion,
       stock,
-      imagen,
       oferta,
       descuento,
       idAdministrador,
@@ -110,6 +111,8 @@ const createProducto = async (req, res) => {
       caracteristicas_especiales
     } = req.body;
 
+    // Obtener el nombre del archivo subido
+    const imagen = req.file ? req.file.filename : null;
     const nuevoProducto = await Producto.create({
       nombre,
       precio: parseFloat(precio),
@@ -172,12 +175,24 @@ const updateProducto = async (req, res) => {
       });
     }
 
+    // Si hay una nueva imagen, eliminar la anterior
+    if (req.file && producto.imagen) {
+      const oldImagePath = path.join(__dirname, '../uploads', producto.imagen);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+    }
     const datosActualizados = req.body;
     if (datosActualizados.precio) {
       datosActualizados.precio = parseFloat(datosActualizados.precio);
     }
     if (datosActualizados.stock) {
       datosActualizados.stock = parseInt(datosActualizados.stock, 10);
+    }
+    
+    // Actualizar imagen si se subió una nueva
+    if (req.file) {
+      datosActualizados.imagen = req.file.filename;
     }
 
     await producto.update(datosActualizados);
@@ -217,6 +232,13 @@ const deleteProducto = async (req, res) => {
       });
     }
 
+    // Eliminar imagen física del servidor
+    if (producto.imagen) {
+      const imagePath = path.join(__dirname, '../uploads', producto.imagen);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
     await producto.update({ activo: false });
 
     res.json({

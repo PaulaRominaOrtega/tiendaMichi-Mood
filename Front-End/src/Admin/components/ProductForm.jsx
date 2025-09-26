@@ -1,6 +1,6 @@
 // src/Admin/components/ProductForm.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../api/axiosConfig';
 
 const ProductForm = ({ onSave, editingProduct, onCancel }) => {
   const [formData, setFormData] = useState(
@@ -13,7 +13,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
           caracteristicas_especiales: editingProduct.caracteristicas_especiales || '',
           precio: editingProduct.precio || 0,
           stock: editingProduct.stock || 0,
-          imagen: editingProduct.imagen || '',
           oferta: editingProduct.oferta || false,
           descuento: editingProduct.descuento || 0,
           idAdministrador: editingProduct.idAdministrador || 1,
@@ -27,7 +26,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
           caracteristicas_especiales: '',
           precio: 0,
           stock: 0,
-          imagen: '',
           oferta: false,
           descuento: 0,
           idAdministrador: 1,
@@ -35,6 +33,10 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
         }
   );
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(
+    editingProduct?.imagen ? `http://localhost:3000/uploads/${editingProduct.imagen}` : null
+  );
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -43,13 +45,45 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      // Crear preview de la imagen
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Crear FormData para enviar archivo
+      const formDataToSend = new FormData();
+      
+      // Agregar todos los campos del formulario
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+      
+      // Agregar archivo si existe
+      if (selectedFile) {
+        formDataToSend.append('imagen', selectedFile);
+      }
       if (editingProduct) {
-        await axios.put(`http://localhost:3000/api/productos/${editingProduct.id}`, formData);
+        await api.put(`/productos/${editingProduct.id}`, formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       } else {
-        await axios.post('http://localhost:3000/api/productos', formData);
+        await api.post('/productos', formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       }
       onSave();
     } catch (error) {
@@ -158,13 +192,20 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Imagen (URL)</label>
               <input
-                type="text"
-                name="imagen"
-                value={formData.imagen}
-                onChange={handleChange}
-                placeholder="URL de la imagen"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
+              {previewUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-md border"
+                  />
+                </div>
+              )}
             </div>
           </div>
           <div className="flex justify-end space-x-2 mt-4">

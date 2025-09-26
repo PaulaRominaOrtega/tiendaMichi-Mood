@@ -9,6 +9,7 @@ const {
     validatePagination
 } = require("../middleware/validation");
 const { verificarJWTAdmin } = require("../middleware/auth.middleware"); 
+const upload = require("../middleware/upload.middleware");
 
 // GET /api/productos - Obtener todos los productos (con paginación)
 // Esta ruta es pública ya que los usuarios comunes pueden ver los productos.
@@ -22,11 +23,11 @@ router.get("/:id", validateProductoId, productoController.getProducto);
 
 // POST /api/productos - Crear un nuevo producto
 // Solo un administrador puede crear un producto.
-router.post("/", verificarJWTAdmin, validateProductoCreate, productoController.createProducto);
+router.post("/", verificarJWTAdmin, upload.single('imagen'), validateProductoCreate, productoController.createProducto);
 
 // PUT /api/productos/:id - Actualizar un producto
 // Solo un administrador puede actualizar un producto.
-router.put("/:id", verificarJWTAdmin, validateProductoId, validateProductoUpdate, productoController.updateProducto);
+router.put("/:id", verificarJWTAdmin, upload.single('imagen'), validateProductoId, validateProductoUpdate, productoController.updateProducto);
 
 // DELETE /api/productos/:id - Eliminar un producto
 // Solo un administrador puede eliminar un producto.
