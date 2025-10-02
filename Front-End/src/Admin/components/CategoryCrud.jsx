@@ -6,7 +6,7 @@ import CategoryForm from './CategoryForm';
 const CategoryCrud = () => {
   const [categories, setCategories] = useState([]);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [showForm, setShowForm] = useState(false); // Nuevo estado para mostrar/ocultar el formulario
+  const [showForm, setShowForm] = useState(false); 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
@@ -27,13 +27,13 @@ const CategoryCrud = () => {
 
   const handleSave = () => {
     setEditingCategory(null);
-    setShowForm(false); // Oculta el formulario al guardar
+    setShowForm(false); 
     fetchCategories();
   };
 
   const handleEdit = (category) => {
     setEditingCategory(category);
-    setShowForm(true); // Muestra el formulario para editar
+    setShowForm(true); 
   };
 
   const handleDelete = async (id) => {
@@ -54,13 +54,13 @@ const CategoryCrud = () => {
   };
   
   const handleAddNewClick = () => {
-    setEditingCategory(null); // Asegura que no haya una categoría en edición
-    setShowForm(true); // Muestra el formulario para agregar una nueva
+    setEditingCategory(null);
+    setShowForm(true); 
   };
 
   const handleCancel = () => {
     setEditingCategory(null);
-    setShowForm(false); // Oculta el formulario al cancelar
+    setShowForm(false); 
   };
 
   return (

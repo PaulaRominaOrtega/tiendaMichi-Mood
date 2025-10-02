@@ -1,7 +1,33 @@
 const { Producto, Categoria, Administrador } = require("../models/index.model");
 const { validationResult } = require("express-validator");
+const path = require('path');
+const fs = require('fs');
 
-// Obtener todos los productos
+// ⚠️ FUNCIONES DE AYUDA PARA MÚLTIPLES IMÁGENES ⚠️
+const getUploadsPath = (filename) => {
+  return path.join(__dirname, '../uploads', filename.trim());
+};
+
+const deleteProductImages = (imageString) => {
+  if (imageString) {
+    const imageNames = imageString.split(',');
+    imageNames.forEach(imageName => {
+      const imagePath = getUploadsPath(imageName);
+      if (fs.existsSync(imagePath)) {
+        try {
+          // Usamos unlink para eliminar el archivo del sistema de archivos
+          fs.unlinkSync(imagePath);
+        } catch (error) {
+          console.error(`Error al eliminar el archivo ${imageName}:`, error);
+        }
+      }
+    });
+  }
+};
+
+// --------------------------------------------------------------------------------------
+// OBTENER TODOS LOS PRODUCTOS
+// --------------------------------------------------------------------------------------
 const getProductos = async (req, res) => {
   try {
     const { page = 1, limit = 10, idCategoria, oferta = undefined } = req.query;
@@ -42,7 +68,9 @@ const getProductos = async (req, res) => {
   }
 };
 
-// Obtener un producto por ID
+// --------------------------------------------------------------------------------------
+// OBTENER UN PRODUCTO POR ID
+// --------------------------------------------------------------------------------------
 const getProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -83,7 +111,10 @@ const getProducto = async (req, res) => {
   }
 };
 
-// Crear un nuevo producto
+
+// --------------------------------------------------------------------------------------
+// CREAR UN NUEVO PRODUCTO
+// --------------------------------------------------------------------------------------
 const createProducto = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -100,7 +131,6 @@ const createProducto = async (req, res) => {
       precio,
       descripcion,
       stock,
-      imagen,
       oferta,
       descuento,
       idAdministrador,
@@ -110,18 +140,21 @@ const createProducto = async (req, res) => {
       caracteristicas_especiales
     } = req.body;
 
+    const imagenes = req.files && req.files.length > 0
+      ? req.files.map(file => file.filename).join(',') 
+      : null;
+
     const nuevoProducto = await Producto.create({
       nombre,
       precio: parseFloat(precio),
       descripcion,
       stock: parseInt(stock, 10),
-      imagen,
+      imagen: imagenes,
       oferta,
       descuento,
       idAdministrador,
       idCategoria,
       activo: true,
-      // Se pasan los nuevos campos al modelo
       material,
       capacidad,
       caracteristicas_especiales
@@ -134,6 +167,11 @@ const createProducto = async (req, res) => {
     });
   } catch (err) {
     console.error("Error en createProducto:", err);
+    // Si la creación falla y se subieron archivos, debemos borrarlos
+    if (req.files) {
+      const uploadedNames = req.files.map(file => file.filename).join(',');
+      deleteProductImages(uploadedNames);
+    }
     res.status(500).json({
       success: false,
       error: "Error interno del servidor",
@@ -143,7 +181,9 @@ const createProducto = async (req, res) => {
   }
 };
 
-// Actualizar un producto
+// --------------------------------------------------------------------------------------
+// ACTUALIZAR UN PRODUCTO (FUNCIÓN CORREGIDA)
+// --------------------------------------------------------------------------------------
 const updateProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,8 +211,34 @@ const updateProducto = async (req, res) => {
         error: "Producto no encontrado",
       });
     }
+    let datosActualizados = { ...req.body };
 
-    const datosActualizados = req.body;
+    // Manejo de imágenes
+    if (req.files && req.files.length > 0) {
+      deleteProductImages(producto.imagen);
+      const nuevosImagenesString = req.files.map(file => file.filename).join(',');
+      datosActualizados.imagen = nuevosImagenesString;
+
+    } else if ('imagen' in datosActualizados && datosActualizados.imagen === null) {
+      deleteProductImages(producto.imagen);
+      datosActualizados.imagen = null;
+    }
+
+    // Lógica para manejo de múltiples imágenes
+    if (req.files && req.files.length > 0) {
+      // 1. Si se subieron nuevas imágenes, elimina las viejas del disco
+      deleteProductImages(producto.imagen);
+
+      // 2. Crea el string con los nuevos nombres de archivo
+      const nuevosImagenesString = req.files.map(file => file.filename).join(',');
+      datosActualizados.imagen = nuevosImagenesString;
+
+    } else if (datosActualizados.hasOwnProperty('imagen') && datosActualizados.imagen === null) {
+      // Opción para borrar todas las imágenes si el frontend envía 'imagen: null'
+      deleteProductImages(producto.imagen);
+      datosActualizados.imagen = null;
+    }
+
     if (datosActualizados.precio) {
       datosActualizados.precio = parseFloat(datosActualizados.precio);
     }
@@ -197,7 +263,9 @@ const updateProducto = async (req, res) => {
   }
 };
 
-// Eliminar un producto (soft delete)
+// --------------------------------------------------------------------------------------
+// ELIMINAR UN PRODUCTO (SOFT DELETE)
+// --------------------------------------------------------------------------------------
 const deleteProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -217,6 +285,10 @@ const deleteProducto = async (req, res) => {
       });
     }
 
+    // Eliminar todas las imágenes físicas del servidor
+    deleteProductImages(producto.imagen);
+
+    // Marcar como inactivo
     await producto.update({ activo: false });
 
     res.json({

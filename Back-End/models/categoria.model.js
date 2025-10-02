@@ -16,7 +16,8 @@ const Categoria = sequelize.define(
       },
       imagenUrl: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: '', 
       },
       activa: {
         type: DataTypes.BOOLEAN,

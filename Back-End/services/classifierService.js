@@ -1,5 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
 
 // Define las palabras clave para las categorías de tu tienda de gatos
 const categoryKeywords = {
@@ -49,8 +51,19 @@ const calculateKeywordScores = (message) => {
 
 // Función para clasificar usando IA (Gemini)
 const classifyWithAI = async (message) => {
+  if (!genAI) {
+    return {
+      category: 'otros',
+      confidence: 0.4,
+      reason: 'Gemini no configurado'
+    };
+  }
+
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' 
+    });
+
     const prompt = `Clasifica el siguiente mensaje de usuario en UNA de estas categorías exactas:
     - productos: preguntas sobre tazas, lapiceras, pantuflas o precios de productos
     - envios: preguntas sobre entregas, zonas o costos de envío
@@ -62,6 +75,7 @@ const classifyWithAI = async (message) => {
 
     Responde SOLO con el nombre de la categoría, sin explicaciones adicionales.
     `;
+
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     const aiCategory = responseText.toLowerCase().trim();
@@ -72,7 +86,7 @@ const classifyWithAI = async (message) => {
       reason: 'Clasificación con IA'
     };
   } catch (error) {
-    console.error('Error en clasificación con IA:', error);
+    console.warn('⚠️ Gemini no disponible, usando fallback:', error?.statusText || error.message);
     return {
       category: 'otros',
       confidence: 0.4,
@@ -88,15 +102,15 @@ const classifyMessage = async (message) => {
   // Paso 1: Clasificación rápida por palabras clave
   const isInvalid = invalidPatterns.some(pattern => pattern.test(cleanMessage));
   if (isInvalid) {
-    return { category: 'saludo', confidence: 0.9 };
+    return { category: 'saludo', confidence: 0.9, reason: 'Mensaje corto o saludo' };
   }
   
   const scores = calculateKeywordScores(cleanMessage);
   const bestMatch = Object.entries(scores).sort(([, a], [, b]) => b - a)[0];
   const [bestCategory, bestScore] = bestMatch;
 
-  if (bestScore > 0.3) { // Umbral de confianza
-    return { category: bestCategory, confidence: bestScore };
+  if (bestScore > 0.2) { // Umbral de confianza un poco más flexible
+    return { category: bestCategory, confidence: bestScore, reason: 'Clasificación por keywords' };
   }
 
   // Paso 2: Si la confianza es baja, recurre a la IA

@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const path = require("path");
 require("dotenv").config();
 
 const { errorHandler, notFound } = require("./middleware/errorHandler");
@@ -12,7 +13,7 @@ const categoriasRoutes = require("./routes/categorias.routes");
 const clienteRoutes = require("./routes/clientes.routes");
 const pedidoRoutes = require("./routes/pedidos.routes"); 
 const chatRoutes = require('./routes/chat.routes.js');
-const authRoutes = require("./routes/auth.routes"); // <-- 1. IMPORTA LAS RUTAS
+const authRoutes = require("./routes/auth.routes");
 
 const PORT = process.env.PORT || 3000;
 
@@ -30,6 +31,20 @@ app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// 🔑 CORRECCIÓN CLAVE: Middleware para permitir que otros orígenes (como tu frontend)
+// carguen las imágenes. Esto soluciona el error 'ERR_BLOCKED_BY_RESPONSE.NotSameOrigin'.
+app.use((req, res, next) => {
+    // Si la solicitud comienza con /uploads/, agrega la cabecera
+    if (req.path.startsWith('/uploads/')) {
+        // 'cross-origin' indica que el recurso puede ser incrustado por cualquier dominio
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); 
+    }
+    next();
+});
+
+// Servir archivos estáticos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/health", (req, res) => {
   res.json({

@@ -6,6 +6,7 @@ import Header from './components/Header';
 import Banner from './components/Banner';
 import FilterBar from './components/FilterBar';
 import ProductList from './components/ProductList';
+import ProductDetail from './components/ProductDetail';
 import Hero from './components/Hero';
 import Footer from './components/Footer';
 import Chatbot from '../src/components/ChatBot';
@@ -41,6 +42,15 @@ const PublicLayout = () => (
   </>
 );
 
+// Componente de Layout para páginas de producto
+const ProductLayout = ({ children }) => (
+  <>
+    <Header />
+    {children}
+    <Footer />
+    <Chatbot />
+  </>
+);
 function App() {
   return (
     <Router>
@@ -65,6 +75,15 @@ function App() {
           <Route path="pedidos/editar/:id" element={<PedidoForm />} />
         </Route>
 
+        {/* Ruta para detalle de producto */}
+        <Route 
+          path="/producto/:id" 
+          element={
+            <ProductLayout>
+              <ProductDetail />
+            </ProductLayout>
+          } 
+        />
         {/* Ruta para la zona pública */}
         <Route path="/" element={<PublicLayout />} />
       </Routes>
