@@ -1,43 +1,73 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { CssBaseline, Box, Alert, CircularProgress, Typography } from '@mui/material';
 
-// Componentes de la zona pública
+// === Importaciones de Componentes Públicos (Front-End/src/components) ===
 import Header from './components/Header';
-import Banner from './components/Banner';
-import FilterBar from './components/FilterBar';
-import ProductList from './components/ProductList';
-import ProductDetail from './components/ProductDetail';
-import Hero from './components/Hero';
 import Footer from './components/Footer';
-import Chatbot from '../src/components/ChatBot';
+import Chatbot from './components/ChatBot'; 
+import Hero from './components/Hero'; 
+import Banner from './components/Banner'; 
+import FilterBar from './components/FilterBar'; 
+import ProductList from './components/ProductList'; 
+import ProductDetail from './components/ProductDetail'; 
+import CartPage from './components/CartPage'; 
+import NosotrosPage from './components/NosotrosPage'; 
+import ContactoPage from './components/ContactoPage'; // 🚨 NUEVA IMPORTACIÓN DE CONTACTO
 
-// ¡Nuevos componentes necesarios! (Asumiendo que los crearás en src/components)
-const NosotrosPage = () => <div>Página de Nosotros.</div>; // Componente placeholder
-const CarritoPage = () => <div>Página de Carrito de Compras.</div>; // Componente placeholder
 
-// Componentes de la zona de administración
-import AdminLayout from './Admin/components/AdminLayout';
-import Dashboard from './Admin/pages/Dashboard';
-import ProductCrud from './Admin/pages/ProductCrud';
-import CategoryCrud from '../src/Admin/components/CategoryCrud';
-import ClienteCrud from '../src/Admin/components/ClienteCrud';
-import PedidoCrud from '../src/Admin/components/PedidoCrud';
-import PedidoForm from '../src/Admin/components/PedidoForm';
-
-// Nuevo componente de login para administradores
+// === Importaciones de Componentes de Administración (Front-End/src/Admin/...) ===
 import AdminLoginPage from './Admin/pages/AdminLoginPage';
+import AdminLayout from './Admin/components/AdminLayout'; 
+import Dashboard from './Admin/pages/Dashboard'; 
+import ProductCrud from './Admin/pages/ProductCrud'; 
+import CategoryCrud from './Admin/components/CategoryCrud'; 
+import ClienteCrud from './Admin/components/ClienteCrud'; 
+import PedidoCrud from './Admin/components/PedidoCrud'; 
+import PedidoForm from './Admin/components/PedidoForm'; 
 
-// Componente "guardián" para proteger las rutas
+// === Importaciones CLAVE para el Carrito ===
+import { CartProvider, useCart } from './context/CartContext'; 
+// ------------------------------------------
+
+// Componente "guardián" para proteger las rutas de administración
 const PrivateAdminRoute = ({ children }) => {
   const token = localStorage.getItem('adminToken');
   return token ? children : <Navigate to="/admin/login" />;
 };
 
-// Componente de Layout para la zona pública, solo define la estructura (Header/Footer/Chat)
+// Componente para mostrar las notificaciones del carrito
+const NotificationBar = () => {
+    const { notification } = useCart();
+
+    if (!notification) return null;
+
+    return (
+        <Box sx={{ 
+            position: 'fixed', 
+            top: { xs: 8, sm: 20 }, 
+            right: { xs: 8, sm: 20 }, 
+            zIndex: 1300,
+            maxWidth: '90%'
+        }}>
+            <Alert 
+                severity={notification.severity} 
+                variant="filled" 
+                sx={{ width: '100%' }}
+            >
+                {notification.message}
+            </Alert>
+        </Box>
+    );
+};
+
+
+// Componente de Layout para la zona pública 
 const MainLayout = ({ children }) => (
   <>
     <Header />
-    <main style={{ minHeight: '80vh' }}>{children}</main> {/* Añadimos el contenido de la página aquí */}
+    <NotificationBar /> {/* Mostramos las notificaciones dentro del Layout */}
+    <main style={{ minHeight: '80vh' }}>{children}</main>
     <Footer />
     <Chatbot />
   </>
@@ -46,79 +76,87 @@ const MainLayout = ({ children }) => (
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* === Rutas de Administración === */}
+        {/* Envolvemos toda la lógica de rutas y componentes en el CartProvider */}
+        <CartProvider>
+            <CssBaseline />
+            <Routes>
+                
+                {/* === Rutas de Administración === */}
+                <Route path="/admin/login" element={<AdminLoginPage />} />
 
-        {/* Ruta para el inicio de sesión del administrador (PÚBLICA) */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route
+                    path="/admin"
+                    element={
+                        <PrivateAdminRoute>
+                            <AdminLayout />
+                        </PrivateAdminRoute>
+                    }
+                >
+                    <Route index element={<Dashboard />} />
+                    <Route path="productos" element={<ProductCrud />} />
+                    <Route path="categorias" element={<CategoryCrud />} />
+                    <Route path="clientes" element={<ClienteCrud />} />
+                    <Route path="pedidos" element={<PedidoCrud />} />
+                    <Route path="pedidos/editar/:id" element={<PedidoForm />} />
+                </Route>
 
-        {/* Rutas para la zona de administración (PROTEGIDAS) */}
-        <Route
-          path="/admin"
-          element={
-            <PrivateAdminRoute>
-              <AdminLayout />
-            </PrivateAdminRoute>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="productos" element={<ProductCrud />} />
-          <Route path="categorias" element={<CategoryCrud />} />
-          <Route path="clientes" element={<ClienteCrud />} />
-          <Route path="pedidos" element={<PedidoCrud />} />
-          <Route path="pedidos/editar/:id" element={<PedidoForm />} />
-        </Route>
+                {/* === Rutas Públicas de la Tienda === */}
+                
+                <Route path="/" element={
+                    <MainLayout>
+                        <Hero />
+                        <Banner />
+                        <FilterBar />
+                        <ProductList /> 
+                    </MainLayout>
+                } />
+                
+                <Route path="/productos" element={
+                    <MainLayout>
+                        <FilterBar />
+                        <ProductList /> 
+                    </MainLayout>
+                } />
 
-        {/* === Rutas Públicas de la Tienda === */}
-        
-        {/* Ruta Home - Muestra Hero, Banner, etc. */}
-        <Route path="/" element={
-          <MainLayout>
-            <Hero />
-            <Banner />
-            <FilterBar />
-            <ProductList /> 
-          </MainLayout>
-        } />
-        
-        {/* Rutas de Navegación principales */}
-        <Route path="/productos" element={
-          <MainLayout>
-            <FilterBar />
-            <ProductList /> 
-          </MainLayout>
-        } />
+                <Route path="/nosotros" element={
+                    <MainLayout>
+                        <NosotrosPage /> 
+                    </MainLayout>
+                } />
+                
+                {/* 🚨 NUEVA RUTA DE CONTACTO 🚨 */}
+                <Route path="/contacto" element={
+                    <MainLayout>
+                        <ContactoPage /> 
+                    </MainLayout>
+                } />
+                
+                <Route path="/carrito" element={
+                    <MainLayout>
+                        <CartPage /> 
+                    </MainLayout>
+                } />
 
-        <Route path="/nosotros" element={
-          <MainLayout>
-            <NosotrosPage /> 
-          </MainLayout>
-        } />
+                <Route 
+                    path="/producto/:id" 
+                    element={
+                        <MainLayout>
+                            <ProductDetail />
+                        </MainLayout>
+                    } 
+                />
+                
+                {/* Ruta 404: Captura cualquier otra URL no definida */}
+                <Route path="*" element={
+                    <MainLayout>
+                        <Box sx={{ textAlign: 'center', py: 5 }}>
+                            <Typography variant="h4">404 - Página no encontrada</Typography>
+                        </Box>
+                    </MainLayout>
+                } />
 
-        <Route path="/carrito" element={
-          <MainLayout>
-            <CarritoPage /> 
-          </MainLayout>
-        } />
-
-        {/* Ruta para detalle de producto */}
-        <Route 
-          path="/producto/:id" 
-          element={
-            <MainLayout>
-              <ProductDetail />
-            </MainLayout>
-          } 
-        />
-        
-        {/* Ruta 404 - Manejo de rutas no definidas */}
-        <Route path="*" element={
-          <MainLayout>
-            <div>404 - Página no encontrada</div>
-          </MainLayout>
-        } />
-
-      </Routes>
+            </Routes>
+        </CartProvider>
     </Router>
   );
 }

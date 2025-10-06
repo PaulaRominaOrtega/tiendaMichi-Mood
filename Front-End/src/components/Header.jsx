@@ -15,9 +15,14 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Badge from '@mui/material/Badge'; // 🚨 IMPORTADO: Necesario para el conteo
 
 // --- Importar el Custom Hook ---
 import useCategories from '../hooks/useCategories'; 
+// ------------------------------
+
+// 🚨 IMPORTACIÓN CLAVE: El hook para usar el carrito
+import { useCart } from '../context/CartContext'; 
 // ------------------------------
 
 // Rutas de navegación estáticas
@@ -34,8 +39,12 @@ function Header() {
   // Uso el hook para obtener las categorías
   const { categories: fetchedCategories, loading, error } = useCategories(); 
   
-  // 🚨 Filtramos solo las categorías que queremos mostrar en el menú simple
-  // Asegúrate de que estos nombres coincidan EXACTAMENTE con tu base de datos
+  // 🚨 Usamos el hook para obtener el conteo total de ítems
+  const { totalItems } = useCart(); 
+  // ----------------------------------------------------
+  
+  // Filtramos solo las categorías que queremos mostrar en el menú simple
+  // ⚠️ Importante: Verifica que 'Deco Hogar' coincida con tu DB. Lo dejé con H mayúscula como lo enviaste.
   const categoriesToShow = fetchedCategories.filter(cat => 
       ['Deco Hogar', 'Cocina', 'Librería', 'Accesorios'].includes(cat.nombre)
   );
@@ -56,12 +65,9 @@ function Header() {
   const handleCategoryClick = (categoryName) => {
       handleCloseProductsMenu();
       
-      // 💡 Corrección del linter: usamos el constructor RegExp para generar el slug
       const regex = new RegExp("\\s", "g"); 
-      // Genera el slug (ej: 'Deco hogar' -> 'deco-hogar')
       const slug = categoryName.toLowerCase().replace(regex, '-'); 
       
-      // Navega a la vista de productos, pasando la categoría en el query param
       navigate(`/productos?categoria=${slug}`); 
   };
 
@@ -162,12 +168,14 @@ function Header() {
           {/* Íconos de Carrito y Configuración */}
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Tooltip title="Ver carrito">
+              {/* 🚨 MODIFICADO: Usamos totalItems y onClick con navigate */}
               <IconButton 
                 color="inherit" 
-                component={Link} 
-                to="/carrito" 
+                onClick={() => navigate('/carrito')} // Redirige a la página del carrito
               >
-                <ShoppingCartIcon />
+                <Badge badgeContent={totalItems} color="error" max={99}> 
+                  <ShoppingCartIcon />
+                </Badge>
               </IconButton>
             </Tooltip>
             {/* Menú de Usuario (Configuración) */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; // 🔑 Importamos useRef
+import React, { useState, useEffect, useRef } from 'react'; 
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Slider from 'react-slick';
@@ -12,14 +12,19 @@ import {
   Chip,
   Divider,
   IconButton,
-  Alert
+  Alert,
+  // 🚨 Añadimos InputBase si quieres control de cantidad, aunque lo haremos simple por ahora
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'; // 🔑 Icono para Siguiente
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';     // 🔑 Icono para Anterior
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'; 
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';     
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+
+// 🚨 IMPORTACIÓN CLAVE: El hook para usar el carrito
+import { useCart } from '../context/CartContext'; 
+// --------------------------------------------------
 
 // URL base del backend
 const BACKEND_BASE_URL = 'http://localhost:3000'; 
@@ -32,7 +37,10 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // 🔑 Creamos la referencia para controlar el Slider
+  // 🚨 Usamos el hook del carrito para acceder a la función 'addToCart'
+  const { addToCart } = useCart(); 
+  // -----------------------------------------------------------------
+
   const sliderRef = useRef(null);
 
   useEffect(() => {
@@ -72,7 +80,7 @@ const ProductDetail = () => {
     }
   };
 
-  // 🔑 FUNCIONES PARA CONTROLAR EL SLIDER
+  // FUNCIONES PARA CONTROLAR EL SLIDER
   const goToNext = () => {
     sliderRef.current.slickNext();
   };
@@ -80,22 +88,26 @@ const ProductDetail = () => {
   const goToPrev = () => {
     sliderRef.current.slickPrev();
   };
-  // ------------------------------------
 
+  // 🚨 FUNCIÓN CORREGIDA: Agrega el producto al contexto del carrito
   const handleAddToCart = () => {
-    alert('Producto agregado al carrito (funcionalidad pendiente)');
+    if (product && product.stock > 0) {
+        // Pasamos el objeto product completo al contexto
+        addToCart(product, 1); // Agregamos 1 unidad por defecto
+    }
   };
+  // -------------------------------------------------------------
 
   // Configuramos el carrusel para que no muestre flechas internas 
   // ya que usaremos botones externos
   const carouselSettings = {
     dots: true,
-    infinite: false, // Es mejor false para evitar bucles infinitos en pocos slides
+    infinite: false, 
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: false,
-    arrows: false, // <<-- DESACTIVAMOS FLECHAS INTERNAS
+    arrows: false, 
   };
 
   if (loading) {
@@ -110,8 +122,8 @@ const ProductDetail = () => {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity={error ? "error" : "warning"}>{error || 'Producto no encontrado'}</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')} sx={{ mt: 2 }}>
-          Volver al inicio
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/productos')} sx={{ mt: 2 }}>
+          Volver a productos
         </Button>
       </Container>
     );
@@ -124,7 +136,7 @@ const ProductDetail = () => {
       {/* Botón de regreso */}
       <Box sx={{ mb: 3 }}>
         <IconButton
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/productos')} // Navega a la lista de productos
           sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
         >
           <ArrowBackIcon />
@@ -143,7 +155,7 @@ const ProductDetail = () => {
                   position: 'relative' 
                 }}
               >
-                {/* 🚨 RENDERIZACIÓN DEL SLIDER CON LA REFERENCIA */}
+                {/* RENDERIZACIÓN DEL SLIDER CON LA REFERENCIA */}
                 <Slider {...carouselSettings} ref={sliderRef}>
                   {displayImageUrls.map((url, idx) => (
                     <Box key={idx}>
@@ -165,7 +177,7 @@ const ProductDetail = () => {
                   ))}
                 </Slider>
                 
-                {/* 🔑 BOTONES DE NAVEGACIÓN MANUAL */}
+                {/* BOTONES DE NAVEGACIÓN MANUAL */}
                 {displayImageUrls.length > 1 && (
                     <Box 
                         sx={{ 
@@ -240,7 +252,7 @@ const ProductDetail = () => {
                 size="large"
                 fullWidth
                 startIcon={<ShoppingCartIcon />}
-                onClick={handleAddToCart}
+                onClick={handleAddToCart} // 🚨 Usamos la función del contexto
                 disabled={product.stock === 0}
                 sx={{ py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
               >
