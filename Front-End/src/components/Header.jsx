@@ -1,11 +1,11 @@
 import * as React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -13,39 +13,80 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
-const pages = ['Productos', 'Nosotros'];
+// --- Importar el Custom Hook ---
+import useCategories from '../hooks/useCategories'; 
+// ------------------------------
+
+// Rutas de navegación estáticas
+const pagesWithRoutes = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Nosotros', path: '/nosotros' },
+  { name: 'Contacto', path: '/contacto' }, 
+];
 const settings = ['Perfil', 'Cuenta', 'Panel', 'Cerrar cuenta'];
 
-function Header() {
-  const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const [anchorElUser, setAnchorElUser] = React.useState(null);
 
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
+function Header() {
+  const navigate = useNavigate();
+  // Uso el hook para obtener las categorías
+  const { categories: fetchedCategories, loading, error } = useCategories(); 
+  
+  // 🚨 Filtramos solo las categorías que queremos mostrar en el menú simple
+  // Asegúrate de que estos nombres coincidan EXACTAMENTE con tu base de datos
+  const categoriesToShow = fetchedCategories.filter(cat => 
+      ['Deco Hogar', 'Cocina', 'Librería', 'Accesorios'].includes(cat.nombre)
+  );
+
+  const [anchorElProducts, setAnchorElProducts] = React.useState(null);
+  const [anchorElUser, setAnchorElUser] = React.useState(null);
+  
+  // --- Manejo del Menú de Productos (Abrir/Cerrar al hacer click) ---
+  const handleOpenProductsMenu = (event) => {
+    setAnchorElProducts(event.currentTarget);
   };
+
+  const handleCloseProductsMenu = () => {
+    setAnchorElProducts(null);
+  };
+  
+  // --- Manejo de Navegación y Filtro (CLAVE) ---
+  const handleCategoryClick = (categoryName) => {
+      handleCloseProductsMenu();
+      
+      // 💡 Corrección del linter: usamos el constructor RegExp para generar el slug
+      const regex = new RegExp("\\s", "g"); 
+      // Genera el slug (ej: 'Deco hogar' -> 'deco-hogar')
+      const slug = categoryName.toLowerCase().replace(regex, '-'); 
+      
+      // Navega a la vista de productos, pasando la categoría en el query param
+      navigate(`/productos?categoria=${slug}`); 
+  };
+
+  // --- Manejo del Menú de Usuario ---
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
   };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
 
+
   return (
-    <AppBar position="static" sx={{ mt:2, backgroundColor: '#9e9e9e' }}> {/* cambio a Barra gris */}
+    <AppBar position="static" sx={{ mt:2, backgroundColor: '#9e9e9e' }}> 
       <Container maxWidth="xl">
         <Toolbar disableGutters>
+          
+          {/* Logo y Nombre de la Tienda (Desktop) */}
           <GitHubIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           <Typography
             variant="h6"
             noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
+            component={Link} 
+            to="/" 
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -59,78 +100,82 @@ function Header() {
             MichiMood
           </Typography>
 
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-            <MenuItem
-              size="large"
-              aria-label="menu"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              <MenuIcon />
-            </MenuItem>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-              keepMounted
-              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{ display: { xs: 'block', md: 'none' } }}
-            >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-
-          <GitHubIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
-            sx={{
-              mr: 2,
-              display: { xs: 'flex', md: 'none' },
-              flexGrow: 1,
-              fontFamily: 'pacifico',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >
-            MichiMood
-          </Typography>
-
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+          {/* Enlaces de navegación Desktop */}
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+            
+            {/* Páginas estáticas */}
+            {pagesWithRoutes.map((page) => (
               <Button
-                key={page}
-                onClick={handleCloseNavMenu}
+                key={page.name}
+                component={Link} 
+                to={page.path} 
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
-                {page}
+                {page.name}
               </Button>
             ))}
+
+            {/* --- Botón de CATEGORÍAS con Menú Simple --- */}
+            <Button
+                key="Categorias"
+                aria-controls={anchorElProducts ? 'simple-menu' : undefined}
+                aria-haspopup="true"
+                onClick={handleOpenProductsMenu} // Abre el menú al hacer clic
+                sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+                Categorías
+            </Button>
+            
+            {/* --- MENÚ SIMPLE DINÁMICO --- */}
+            <Menu
+              id="simple-menu"
+              anchorEl={anchorElProducts}
+              open={Boolean(anchorElProducts)}
+              onClose={handleCloseProductsMenu}
+              MenuListProps={{
+                'aria-labelledby': 'basic-button',
+              }}
+              // Aseguramos que el menú aparezca debajo del botón
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            >
+              {loading && <MenuItem disabled><CircularProgress size={20} /></MenuItem>}
+              {error && <MenuItem disabled><Alert severity="error">Error al cargar categorías</Alert></MenuItem>}
+                
+              {!loading && categoriesToShow.length > 0 && categoriesToShow.map((category) => (
+                <MenuItem 
+                    key={category.id} 
+                    onClick={() => handleCategoryClick(category.nombre)} // Navega al filtro
+                >
+                    {category.nombre}
+                </MenuItem>
+              ))}
+              
+              {!loading && categoriesToShow.length === 0 && (
+                  <MenuItem disabled>No hay categorías disponibles.</MenuItem>
+              )}
+            </Menu>
+            {/* ------------------------------------------- */}
+
           </Box>
 
+          {/* Íconos de Carrito y Configuración */}
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Tooltip title="Ver carrito">
-              <IconButton color="inherit">
+              <IconButton 
+                color="inherit" 
+                component={Link} 
+                to="/carrito" 
+              >
                 <ShoppingCartIcon />
               </IconButton>
             </Tooltip>
-
+            {/* Menú de Usuario (Configuración) */}
             <Tooltip title="Abrir Configuración">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Gato" src="/images/avatar.jpeg" />
+                <Avatar alt="Usuario" src="/images/avatar.jpeg" /> 
               </IconButton>
             </Tooltip>
-
             <Menu
               sx={{ mt: '45px' }}
               id="menu-appbar"

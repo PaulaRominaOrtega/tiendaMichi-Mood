@@ -2,6 +2,7 @@ const { Producto, Categoria, Administrador } = require("../models/index.model");
 const { validationResult } = require("express-validator");
 const path = require('path');
 const fs = require('fs');
+const { Op } = require('sequelize'); // Asegúrate de importar Op
 
 // ⚠️ FUNCIONES DE AYUDA PARA MÚLTIPLES IMÁGENES ⚠️
 const getUploadsPath = (filename) => {
@@ -26,15 +27,43 @@ const deleteProductImages = (imageString) => {
 };
 
 // --------------------------------------------------------------------------------------
-// OBTENER TODOS LOS PRODUCTOS
+// OBTENER TODOS LOS PRODUCTOS (CON FILTRO POR NOMBRE DE CATEGORÍA)
 // --------------------------------------------------------------------------------------
 const getProductos = async (req, res) => {
   try {
-    const { page = 1, limit = 10, idCategoria, oferta = undefined } = req.query;
+    const { page = 1, limit = 10, idCategoria, oferta = undefined, categoria } = req.query; 
     const offset = (page - 1) * limit;
 
     const whereClause = { activo: true };
-    if (idCategoria) whereClause.idCategoria = idCategoria;
+    
+    let categoriaIdFiltrada = idCategoria; // Mantenemos el filtro por ID existente si existe
+
+    // 🚨 NUEVA LÓGICA: Si se envió el NOMBRE de la categoría
+    if (categoria) {
+        // 1. Buscamos el ID de la categoría por su nombre
+        const categoriaBuscada = await Categoria.findOne({ 
+            where: { 
+                nombre: categoria, // Filtramos por el nombre exacto
+                activa: true 
+            },
+            attributes: ['id']
+        });
+
+        if (categoriaBuscada) {
+            categoriaIdFiltrada = categoriaBuscada.id; // Establecemos el ID para la consulta
+        } else {
+            // Si el nombre de la categoría no existe, forzamos una búsqueda vacía.
+            // Usamos un ID que nunca existirá (ej. 0)
+            categoriaIdFiltrada = 0; 
+        }
+    }
+    
+    // 2. Aplicamos el ID de la categoría
+    if (categoriaIdFiltrada) {
+        whereClause.idCategoria = categoriaIdFiltrada;
+    }
+
+    // Filtro de oferta existente
     if (oferta !== undefined) whereClause.oferta = oferta === "true";
 
     const productos = await Producto.findAndCountAll({
@@ -215,17 +244,6 @@ const updateProducto = async (req, res) => {
 
     // Manejo de imágenes
     if (req.files && req.files.length > 0) {
-      deleteProductImages(producto.imagen);
-      const nuevosImagenesString = req.files.map(file => file.filename).join(',');
-      datosActualizados.imagen = nuevosImagenesString;
-
-    } else if ('imagen' in datosActualizados && datosActualizados.imagen === null) {
-      deleteProductImages(producto.imagen);
-      datosActualizados.imagen = null;
-    }
-
-    // Lógica para manejo de múltiples imágenes
-    if (req.files && req.files.length > 0) {
       // 1. Si se subieron nuevas imágenes, elimina las viejas del disco
       deleteProductImages(producto.imagen);
 
@@ -308,7 +326,7 @@ const deleteProducto = async (req, res) => {
 module.exports = {
   getProductos,
   getProducto,
-  createProducto,
+  createProducto, 
   updateProducto,
   deleteProducto,
 };

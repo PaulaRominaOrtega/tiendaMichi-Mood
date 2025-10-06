@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+// 🔑 Importamos useLocation de react-router-dom
+import { Link, useLocation } from "react-router-dom"; 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
@@ -8,55 +9,115 @@ import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import Container from "@mui/material/Container"; // Importar Container y Box si no están
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
 
 // URL base del backend para servir las imágenes
 const BACKEND_BASE_URL = "http://localhost:3000";
+const DEFAULT_IMAGE_PATH = "/images/default.jpg";
 
+// Cambiamos a ProductList para mantener tu nombre
 const ProductList = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true); // Añadimos loading y error
+  const [error, setError] = useState(null);
+
+  // 🔑 1. Inicializar useLocation
+  const location = useLocation(); 
+  
+  // 🔑 2. Extraer el filtro de la URL
+  const queryParams = new URLSearchParams(location.search);
+  const categoriaSlug = queryParams.get('categoria'); 
+  
+  // Convertir el slug (ej: 'cuadernos') a nombre legible (ej: 'Cuadernos')
+  const categoriaNombre = categoriaSlug 
+    ? categoriaSlug.replace(/-/g, ' ').split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ')
+    : null; // Usaremos null si no hay filtro
 
   // Cargar productos desde el backend
+  // 🔑 El useEffect ahora depende de 'categoriaSlug'
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [categoriaSlug]); // Se re-ejecuta si el filtro cambia
 
   const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    
+    // 🔑 3. Construir la URL de la API dinámicamente
+    let url = `${BACKEND_BASE_URL}/api/productos`; 
+    
+    if (categoriaNombre) {
+      // Enviamos el nombre legible de la categoría al Back-End para que filtre
+      // Esto coincide con el cambio que haremos en productos.controller.js
+      url = `${BACKEND_BASE_URL}/api/productos?categoria=${categoriaNombre}&limit=100`; 
+    }
+    
     try {
-      const res = await axios.get(`${BACKEND_BASE_URL}/api/productos`);
-      // Asegurarnos que products sea un array (usando res.data.data si es el formato de tu backend)
+      const res = await axios.get(url);
       setProducts(res.data.data || []);
-    } catch (error) {
-      console.error("Error al obtener productos:", error);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error al obtener productos:", err);
+      setError("Error al cargar la lista de productos.");
+      setLoading(false);
     }
   };
 
   /**
-   * 🔑 CLAVE DE LA CORRECCIÓN: Obtiene la URL de la primera imagen.
-   * Divide el string de imágenes separadas por coma y usa solo la primera.
-   * @param {string} imageString El string de nombres de archivo (ej: "img1.jpg,img2.jpg")
-   * @returns {string} La URL completa de la primera imagen o una imagen por defecto.
+   * Obtiene la URL de la primera imagen. (Tu lógica original)
    */
   const getFirstImageUrl = (imageString) => {
-    // 1. Verifica que exista el string y no esté vacío
     if (!imageString) {
-      return "/images/default.jpg";
+      return DEFAULT_IMAGE_PATH;
     }
-
-    // 2. Divide el string por la coma (,)
     const imageNames = imageString.split(',');
-    
-    // 3. Usa el primer nombre de archivo (después de eliminar espacios en blanco)
     const firstName = imageNames[0].trim();
     
-    // 4. Si el nombre es válido, retorna la URL completa, si no, retorna el default.
     return firstName 
       ? `${BACKEND_BASE_URL}/uploads/${firstName}` 
-      : "/images/default.jpg";
+      : DEFAULT_IMAGE_PATH;
   };
 
+  // --- Manejo de la vista de carga y error ---
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography mt={2}>Cargando productos...</Typography>
+      </Container>
+    );
+  }
 
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+  
+  // --- Renderizado principal ---
   return (
-    <Box sx={{ padding: 4 }}>
+    <Container maxWidth="xl" sx={{ padding: 4 }}>
+      {/* 🔑 Título dinámico para saber qué estamos viendo */}
+      <Typography variant="h4" gutterBottom sx={{ borderBottom: '2px solid #ccc', pb: 1, mb: 4 }}>
+        {categoriaNombre || 'Todos los Productos'}
+      </Typography>
+
+      {products.length === 0 && (
+          <Alert severity="info">
+             {categoriaSlug 
+                ? `No se encontraron productos para la categoría "${categoriaNombre}".`
+                : "No hay productos disponibles."
+             }
+          </Alert>
+      )}
+      
+      {/* Tu layout de productos original */}
       <Box
         sx={{
           display: "grid",
@@ -74,7 +135,6 @@ const ProductList = () => {
             <Link to={`/producto/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <CardMedia
               component="img"
-              // 🚨 CORRECCIÓN APLICADA AQUÍ: Se llama a la función para obtener SOLO la primera URL
               image={getFirstImageUrl(product.imagen)} 
               alt={product.nombre}
               sx={{ height: 200, objectFit: "cover" }}
@@ -82,9 +142,7 @@ const ProductList = () => {
             <CardContent>
               <Typography variant="h6">{product.nombre}</Typography>
               <Typography color="text.secondary">${product.precio}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {product.descripcion}
-              </Typography>
+              {/* Aquí puedes agregar la descripción o categoría si es necesario */}
               <Typography
                 variant="caption"
                 color={product.stock > 0 ? "green" : "red"}
@@ -101,7 +159,7 @@ const ProductList = () => {
           </Card>
         ))}
       </Box>
-    </Box>
+    </Container>
   );
 };
 
