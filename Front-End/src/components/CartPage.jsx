@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; 
+import axios from 'axios';
 import {
     Box,
     Container,
@@ -12,6 +13,8 @@ import {
     Divider,
     IconButton,
     Grid,
+    CircularProgress, 
+    Alert, 
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -30,19 +33,91 @@ const getFirstImageUrl = (imageString) => {
 };
 
 const CartPage = () => {
-    // 🚨 Usamos el hook para obtener los datos y funciones
     const { 
         cart, 
         totalItems, 
         totalPrice, 
         updateQuantity, 
-        removeFromCart 
+        removeFromCart,
+        clearCart, // Ya sabemos que está aquí
     } = useCart();
+    
+    const navigate = useNavigate(); 
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // 🚨 NOTA: Reemplaza este ID por el ID del usuario logeado real.
+    const MOCK_CLIENT_ID = 6; 
 
+    // FUNCIÓN PRINCIPAL DE CHECKOUT
+    const handleCheckout = async () => {
+        
+        // 1. Validación inicial y de ID de cliente
+        if (cart.length === 0) return;
+        
+        if (!MOCK_CLIENT_ID) { 
+             alert("Debe iniciar sesión para finalizar la compra.");
+             navigate('/login');
+             return;
+        }
+
+        setIsLoading(true);
+
+        // 2. Formatear la carga útil (Payload)
+        const orderPayload = {
+            idCliente: MOCK_CLIENT_ID, 
+            total: totalPrice,
+            items: cart.map(item => ({
+                productoId: item.id,
+                cantidad: item.quantity,
+                precioUnitario: item.precio,
+            })),
+        };
+
+        try {
+            // 3. Enviar el pedido al Back-End
+            const response = await axios.post(`${BACKEND_BASE_URL}/api/pedidos`, orderPayload);
+            
+            // 4. Éxito: Limpiar carrito y redirigir
+            clearCart(); 
+            
+            // 🚨 CORRECCIÓN DE NAVEGACIÓN: Redirigir a la página de confirmación
+            // Si la ruta /confirmacion-pedido no existe, crea un componente para ella.
+            navigate('/confirmacion-pedido', { 
+                state: { 
+                    pedidoId: response.data.data.id,
+                    total: totalPrice,
+                } 
+            }); 
+            
+            // Si no quieres crear una página de confirmación, cambia la línea de navigate a:
+            // navigate('/'); // Redirigir a la página principal
+
+        } catch (error) {
+            console.error("Error al finalizar el pedido:", error.response || error);
+            
+            const errorMessage = error.response?.data?.error 
+                                || error.response?.data?.message 
+                                || "Error desconocido al procesar el pedido.";
+            alert(`❌ Fallo en la compra: ${errorMessage}`);
+            
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    // ------------------------------------
+
+    // Comprobar si hay ítems con stock excedido
+    const hasStockError = cart.some(item => item.quantity > item.stock);
+    
+    // REDIRECCIÓN SI EL CARRITO ESTÁ VACÍO (DESPUÉS DE LA COMPRA)
+    // El componente ya no se renderizará con el carrito vacío.
     if (cart.length === 0) {
         return (
             <Container maxWidth="md" sx={{ py: 5, textAlign: 'center' }}>
                 <Typography variant="h5" gutterBottom>Tu carrito está vacío 😔</Typography>
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                    ¡Ya procesaste tu último pedido! Explora nuestros productos.
+                </Typography>
                 <Button variant="contained" component={Link} to="/productos" sx={{ mt: 2 }}>
                     Ver Productos
                 </Button>
@@ -56,6 +131,12 @@ const CartPage = () => {
                 Tu Carrito ({totalItems} {totalItems === 1 ? 'ítem' : 'ítems'})
             </Typography>
             <Divider sx={{ mb: 4 }} />
+
+            {hasStockError && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                    Hay productos en tu carrito con una cantidad mayor al stock disponible. Por favor, ajusta la cantidad antes de continuar.
+                </Alert>
+            )}
 
             <Grid container spacing={4}>
                 {/* Columna de Productos */}
@@ -99,7 +180,6 @@ const CartPage = () => {
                                         onClick={() => updateQuantity(item.id, 1)} 
                                         color="primary"
                                         size="small"
-                                        // Deshabilitar si alcanza el stock
                                         disabled={item.quantity >= item.stock} 
                                     >
                                         <AddIcon />
@@ -146,10 +226,18 @@ const CartPage = () => {
                                 color="primary" 
                                 fullWidth 
                                 sx={{ mt: 3, py: 1.5 }}
-                                onClick={() => alert('Funcionalidad de Checkout Pendiente. Total: ' + totalPrice.toFixed(2))}
+                                onClick={handleCheckout} 
+                                disabled={isLoading || hasStockError} 
+                                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
                             >
-                                Proceder al Pago
+                                {isLoading ? 'Procesando...' : 'Proceder al Pago'}
                             </Button>
+
+                             {hasStockError && (
+                                <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                                    Ajuste cantidades para continuar.
+                                </Typography>
+                            )}
                         </CardContent>
                     </Card>
                 </Grid>

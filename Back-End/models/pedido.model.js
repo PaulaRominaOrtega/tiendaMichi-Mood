@@ -2,45 +2,45 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
 const Pedido = sequelize.define(
-    "Pedido",
-    {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        allowNull: false,
-        unique: true,
-        autoIncrement: true,
-      },
-      fecha: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      total: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      estado: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-        defaultValue: true,
-      },
-  
-      idCliente: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: "clientes",
-          key: "id",
-        },
+  "Pedido",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+      autoIncrement: true,
+    },
+    fecha: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    total: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    estado: {
+      type: DataTypes.ENUM('Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado'),
+      defaultValue: 'Pendiente',
+      allowNull: false,
+    },
+
+    idCliente: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "clientes",
+        key: "id",
       },
     },
-    {
-      tableName: "pedidos",
-      timestamps: false,
-    }
-  );
+  },
+  {
+    tableName: "pedidos",
+    timestamps: false,
+  }
+);
 
 
 
-  module.exports = Pedido;
+module.exports = Pedido;

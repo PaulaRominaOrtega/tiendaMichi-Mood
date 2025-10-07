@@ -13,8 +13,8 @@ import ProductList from './components/ProductList';
 import ProductDetail from './components/ProductDetail'; 
 import CartPage from './components/CartPage'; 
 import NosotrosPage from './components/NosotrosPage'; 
-import ContactoPage from './components/ContactoPage'; // 🚨 NUEVA IMPORTACIÓN DE CONTACTO
-
+import ContactoPage from './components/ContactoPage'; 
+import OrderConfirmationPage from './components/OrderConfirmationPage'; // 🚨 ASUMIMOS QUE ESTE COMPONENTE YA EXISTE
 
 // === Importaciones de Componentes de Administración (Front-End/src/Admin/...) ===
 import AdminLoginPage from './Admin/pages/AdminLoginPage';
@@ -32,13 +32,15 @@ import { CartProvider, useCart } from './context/CartContext';
 
 // Componente "guardián" para proteger las rutas de administración
 const PrivateAdminRoute = ({ children }) => {
-  const token = localStorage.getItem('adminToken');
+  // NOTA: En una app real, deberías validar el token en el servidor al cargar.
+  const token = localStorage.getItem('adminToken'); 
   return token ? children : <Navigate to="/admin/login" />;
 };
 
 // Componente para mostrar las notificaciones del carrito
 const NotificationBar = () => {
-    const { notification } = useCart();
+    // 🚨 Usamos la función useCart para obtener el estado de notificación
+    const { notification } = useCart(); 
 
     if (!notification) return null;
 
@@ -66,8 +68,8 @@ const NotificationBar = () => {
 const MainLayout = ({ children }) => (
   <>
     <Header />
-    <NotificationBar /> {/* Mostramos las notificaciones dentro del Layout */}
-    <main style={{ minHeight: '80vh' }}>{children}</main>
+    <NotificationBar />
+    <main style={{ minHeight: '80vh', padding: '20px 0' /* Ajusta el padding según necesites */ }}>{children}</main>
     <Footer />
     <Chatbot />
   </>
@@ -76,7 +78,6 @@ const MainLayout = ({ children }) => (
 function App() {
   return (
     <Router>
-        {/* Envolvemos toda la lógica de rutas y componentes en el CartProvider */}
         <CartProvider>
             <CssBaseline />
             <Routes>
@@ -98,10 +99,12 @@ function App() {
                     <Route path="clientes" element={<ClienteCrud />} />
                     <Route path="pedidos" element={<PedidoCrud />} />
                     <Route path="pedidos/editar/:id" element={<PedidoForm />} />
+                    {/* 🚨 Eliminada la ruta /confirmacion-pedido de aquí */}
                 </Route>
 
                 {/* === Rutas Públicas de la Tienda === */}
                 
+                {/* Ruta Principal: Home */}
                 <Route path="/" element={
                     <MainLayout>
                         <Hero />
@@ -111,6 +114,7 @@ function App() {
                     </MainLayout>
                 } />
                 
+                {/* Ruta de Listado de Productos (si es diferente al home) */}
                 <Route path="/productos" element={
                     <MainLayout>
                         <FilterBar />
@@ -118,25 +122,7 @@ function App() {
                     </MainLayout>
                 } />
 
-                <Route path="/nosotros" element={
-                    <MainLayout>
-                        <NosotrosPage /> 
-                    </MainLayout>
-                } />
-                
-                {/* 🚨 NUEVA RUTA DE CONTACTO 🚨 */}
-                <Route path="/contacto" element={
-                    <MainLayout>
-                        <ContactoPage /> 
-                    </MainLayout>
-                } />
-                
-                <Route path="/carrito" element={
-                    <MainLayout>
-                        <CartPage /> 
-                    </MainLayout>
-                } />
-
+                {/* Ruta de Detalle de Producto */}
                 <Route 
                     path="/producto/:id" 
                     element={
@@ -145,12 +131,44 @@ function App() {
                         </MainLayout>
                     } 
                 />
+
+                {/* Ruta del Carrito */}
+                <Route path="/carrito" element={
+                    <MainLayout>
+                        <CartPage /> 
+                    </MainLayout>
+                } />
+                
+                {/* 🚨 CORRECCIÓN CLAVE: Ruta de Confirmación de Pedido 🚨 */}
+                {/* Esta ruta es pública y debe ir fuera del /admin */}
+                <Route path="/confirmacion-pedido" element={
+                    <MainLayout>
+                        {/* Asegúrate de que OrderConfirmationPage esté importado arriba */}
+                        <OrderConfirmationPage /> 
+                    </MainLayout>
+                } />
+                
+                {/* Otras Rutas Públicas */}
+                <Route path="/nosotros" element={
+                    <MainLayout>
+                        <NosotrosPage /> 
+                    </MainLayout>
+                } />
+                
+                <Route path="/contacto" element={
+                    <MainLayout>
+                        <ContactoPage /> 
+                    </MainLayout>
+                } />
                 
                 {/* Ruta 404: Captura cualquier otra URL no definida */}
                 <Route path="*" element={
                     <MainLayout>
-                        <Box sx={{ textAlign: 'center', py: 5 }}>
-                            <Typography variant="h4">404 - Página no encontrada</Typography>
+                        <Box sx={{ textAlign: 'center', py: 10 }}>
+                            <Typography variant="h4">404 - Página no encontrada 😕</Typography>
+                            <Typography variant="body1" sx={{ mt: 2 }}>
+                                Parece que te perdiste en el universo de la tienda.
+                            </Typography>
                         </Box>
                     </MainLayout>
                 } />

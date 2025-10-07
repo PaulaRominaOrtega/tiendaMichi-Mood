@@ -1,4 +1,10 @@
+// =================================================================
+// 🚨 CONFIGURACIÓN DEL SERVIDOR CON EXPRESS Y SOCKET.IO 🚨
+// =================================================================
 const express = require("express");
+const http = require("http"); // ✅ Necesario para Socket.IO
+// 🚨 IMPORTAR la función de inicialización en lugar de la clase Server directamente
+const { initializeSocket } = require("./server-config/socket"); 
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
@@ -16,14 +22,24 @@ const chatRoutes = require('./routes/chat.routes.js');
 const authRoutes = require("./routes/auth.routes");
 
 const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173"; // Asumiendo Vite
 
 const app = express();
+// 🚨 PASO 1: Crear el servidor HTTP montando la app Express
+const server = http.createServer(app); 
+
+// 🚨 CÓDIGO ELIMINADO: La inicialización directa de 'io' y su exportación se movieron a 'server-config/socket.js'
+// ------------------------------------------------------------------
+
 
 app.use(helmet());
 
+// Middleware de CORS para Express 
 app.use(
   cors({
-    origin: "*",
+    origin: FRONTEND_URL, // Restringimos CORS a la URL de tu Front-End
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true
   })
 );
 
@@ -32,12 +48,9 @@ app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// 🔑 CORRECCIÓN CLAVE: Middleware para permitir que otros orígenes (como tu frontend)
-// carguen las imágenes. Esto soluciona el error 'ERR_BLOCKED_BY_RESPONSE.NotSameOrigin'.
+// Middleware para Content-Security-Policy (para archivos estáticos)
 app.use((req, res, next) => {
-    // Si la solicitud comienza con /uploads/, agrega la cabecera
     if (req.path.startsWith('/uploads/')) {
-        // 'cross-origin' indica que el recurso puede ser incrustado por cualquier dominio
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); 
     }
     next();
@@ -45,6 +58,9 @@ app.use((req, res, next) => {
 
 // Servir archivos estáticos desde la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 🚨 CÓDIGO ELIMINADO: El log de conexión de Socket.IO se movió a 'server-config/socket.js'
+// ------------------------------------------------------------------
 
 app.get("/health", (req, res) => {
   res.json({
@@ -76,6 +92,11 @@ const initializeDatabase = async () => {
     await sequelize.sync({ alter: true });
     console.log("✅ Tablas sincronizadas correctamente");
     console.log("📚 Tablas definidas:", Object.keys(sequelize.models));
+    
+    // 🚨 PASO DE INICIALIZACIÓN CLAVE: Usamos la función importada
+    initializeSocket(server); 
+    console.log("🔌 Socket.IO inicializado y listo para escuchar");
+    
   } catch (err) {
     console.error("❌ Error en DB:", err);
     process.exit(1);
@@ -84,14 +105,11 @@ const initializeDatabase = async () => {
 
 const startServer = async () => {
   await initializeDatabase();
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor iniciado en el puerto: ${PORT}`);
+  // 🚨 Usar server.listen
+  server.listen(PORT, () => {
+    console.log(`🚀 Servidor EXPRESS & SOCKET.IO iniciado en el puerto: ${PORT}`);
     console.log(`📍 Salud de la API: http://localhost:${PORT}/health`);
-    console.log(`📖 API Productos: http://localhost:${PORT}/api/productos`);
-    console.log(`📖 API Categorias: http://localhost:${PORT}/api/categorias`);
-    console.log(`📖 API Clientes: http://localhost:${PORT}/api/clientes`);
     console.log(`📖 API Pedidos: http://localhost:${PORT}/api/pedidos`); 
-    console.log(`🔐 API Autenticación: http://localhost:${PORT}/api/auth`);
   });
 };
 

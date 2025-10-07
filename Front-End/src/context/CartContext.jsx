@@ -1,11 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 // 1. Crear el Contexto
 const CartContext = createContext();
 
 // 2. Hook personalizado para usar el carrito fácilmente
 export const useCart = () => {
-    return useContext(CartContext);
+    // Si usas un hook fuera del provider, esto te ayuda a debugear
+    const context = useContext(CartContext);
+    if (!context) {
+        throw new Error('useCart must be used within a CartProvider');
+    }
+    return context;
 };
 
 // 3. Proveedor del Contexto (Aquí va toda la lógica)
@@ -40,11 +45,6 @@ export const CartProvider = ({ children }) => {
         setTimeout(() => setNotification(null), 3000); // Ocultar después de 3s
     };
 
-    /**
-     * Agrega un producto o incrementa su cantidad.
-     * @param {Object} product - El objeto producto completo (con stock).
-     * @param {number} quantityToAdd - Cantidad a añadir (por defecto 1).
-     */
     const addToCart = (product, quantityToAdd = 1) => {
         if (product.stock === 0) {
             showNotification('🚫 Producto sin stock.', 'error');
@@ -55,15 +55,13 @@ export const CartProvider = ({ children }) => {
             const existingItem = prevCart.find(item => item.id === product.id);
 
             if (existingItem) {
-                // Si ya existe: Verificar Stock antes de incrementar
                 const newQuantity = existingItem.quantity + quantityToAdd;
                 
                 if (newQuantity > product.stock) {
                     showNotification(`❌ Solo hay ${product.stock} unidades en stock.`, 'warning');
-                    return prevCart; // No modificar el carrito
+                    return prevCart; 
                 }
                 
-                // Incrementar la cantidad
                 const updatedCart = prevCart.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: newQuantity }
@@ -73,18 +71,16 @@ export const CartProvider = ({ children }) => {
                 return updatedCart;
 
             } else {
-                // Si es nuevo: Asegurar que la cantidad inicial no exceda el stock
                 if (quantityToAdd > product.stock) {
                      showNotification(`❌ Solo hay ${product.stock} unidades en stock.`, 'warning');
                      return prevCart;
                 }
                 
-                // Agregar nuevo producto
                 const newItem = {
                     id: product.id,
                     nombre: product.nombre,
                     precio: product.precio,
-                    stock: product.stock, // Guardamos el stock actual del producto
+                    stock: product.stock, 
                     imagen: product.imagen,
                     quantity: quantityToAdd
                 };
@@ -94,11 +90,6 @@ export const CartProvider = ({ children }) => {
         });
     };
 
-    /**
-     * Incrementa o decrementa la cantidad de un producto.
-     * @param {number} productId - ID del producto.
-     * @param {number} delta - +1 para sumar, -1 para restar.
-     */
     const updateQuantity = (productId, delta) => {
         setCart(prevCart => {
             const existingItem = prevCart.find(item => item.id === productId);
@@ -108,18 +99,15 @@ export const CartProvider = ({ children }) => {
             const newQuantity = existingItem.quantity + delta;
 
             if (newQuantity <= 0) {
-                // Si la nueva cantidad es 0 o menos, eliminar el producto
                 showNotification(`🗑️ ${existingItem.nombre} eliminado del carrito.`);
                 return prevCart.filter(item => item.id !== productId);
             }
 
             if (newQuantity > existingItem.stock) {
-                // Verificar Stock
                 showNotification(`❌ Máximo stock alcanzado (${existingItem.stock}).`, 'warning');
                 return prevCart;
             }
 
-            // Actualizar la cantidad
             return prevCart.map(item =>
                 item.id === productId
                     ? { ...item, quantity: newQuantity }
@@ -128,10 +116,6 @@ export const CartProvider = ({ children }) => {
         });
     };
     
-    /**
-     * Elimina un producto completamente del carrito.
-     * @param {number} productId - ID del producto.
-     */
     const removeFromCart = (productId) => {
         setCart(prevCart => {
             const itemToRemove = prevCart.find(item => item.id === productId);
@@ -143,8 +127,17 @@ export const CartProvider = ({ children }) => {
     };
 
     /**
-     * Calcula el total de productos y el costo total.
+     * 🚨 FUNCIÓN FALTANTE: Limpia completamente el carrito.
      */
+    const clearCart = () => {
+        setCart([]);
+        // Limpiar también el almacenamiento local
+        localStorage.removeItem('michimood_cart'); 
+        showNotification('🛒 Carrito vaciado con éxito.', 'info');
+    };
+    
+    // -----------------------------------------------------------
+
     const cartTotals = cart.reduce(
         (acc, item) => {
             acc.totalItems += item.quantity;
@@ -154,16 +147,16 @@ export const CartProvider = ({ children }) => {
         { totalItems: 0, totalPrice: 0 }
     );
     
-    // -----------------------------------------------------------
-
-    const contextValue = {
+    // Usar useMemo para evitar recrear el objeto de contexto innecesariamente
+    const contextValue = useMemo(() => ({
         cart,
         addToCart,
         removeFromCart,
         updateQuantity,
-        ...cartTotals, // totalItems y totalPrice
+        clearCart, // 🚨 ¡CORRECCIÓN CLAVE: AÑADIDO AQUÍ!
+        ...cartTotals, 
         notification
-    };
+    }), [cart, cartTotals.totalItems, cartTotals.totalPrice, notification]); // Dependencias para re-render
 
     return (
         <CartContext.Provider value={contextValue}>
