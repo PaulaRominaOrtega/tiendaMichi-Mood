@@ -22,12 +22,20 @@ const Cliente = sequelize.define(
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false, // 🚨 Cambiamos a 'false' ya que es el identificador único para Google/Local
+        unique: true,     // 🚨 Aseguramos que el email sea único
       },
   
       contrasena: {
         type: DataTypes.STRING,
+        // Permitimos nulo, ya que los usuarios de Google NO tendrán contraseña tradicional.
+        allowNull: true, 
+      },
+      
+      googleId: { // 🚨 NUEVO CAMPO PARA GOOGLE OAUTH
+        type: DataTypes.STRING,
         allowNull: true,
+        unique: true,
       },
     },
     {
@@ -35,7 +43,6 @@ const Cliente = sequelize.define(
       timestamps: false,
     }
   );
-
 
 
 module.exports = Cliente;

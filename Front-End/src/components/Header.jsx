@@ -15,14 +15,16 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import Badge from '@mui/material/Badge'; // 🚨 IMPORTADO: Necesario para el conteo
+import Badge from '@mui/material/Badge'; 
+import Divider from '@mui/material/Divider';
+import LoginIcon from '@mui/icons-material/Login'; 
+import LogoutIcon from '@mui/icons-material/Logout'; 
+import AccountCircleIcon from '@mui/icons-material/AccountCircle'; 
 
-// --- Importar el Custom Hook ---
+// --- Importar Hooks y Contextos ---
 import useCategories from '../hooks/useCategories'; 
-// ------------------------------
-
-// 🚨 IMPORTACIÓN CLAVE: El hook para usar el carrito
-import { useCart } from '../context/CartContext'; 
+import { useCart } from '../context/CartContext'; // 🚨 Necesario para obtener clearCart
+import { useAuth } from '../context/AuthContext'; 
 // ------------------------------
 
 // Rutas de navegación estáticas
@@ -31,20 +33,21 @@ const pagesWithRoutes = [
   { name: 'Nosotros', path: '/nosotros' },
   { name: 'Contacto', path: '/contacto' }, 
 ];
-const settings = ['Perfil', 'Cuenta', 'Panel', 'Cerrar cuenta'];
+
+// Configuraciones del menú de usuario
+const settings = ['Perfil', 'Cuenta', 'Panel'];
 
 
 function Header() {
   const navigate = useNavigate();
-  // Uso el hook para obtener las categorías
   const { categories: fetchedCategories, loading, error } = useCategories(); 
   
-  // 🚨 Usamos el hook para obtener el conteo total de ítems
-  const { totalItems } = useCart(); 
-  // ----------------------------------------------------
+  // 🚨 OBTENEMOS EL ESTADO DE AUTENTICACIÓN Y LA FUNCIÓN LOGOUT 🚨
+  const { isAuthenticated, logout, email } = useAuth(); 
   
-  // Filtramos solo las categorías que queremos mostrar en el menú simple
-  // ⚠️ Importante: Verifica que 'Deco Hogar' coincida con tu DB. Lo dejé con H mayúscula como lo enviaste.
+  // 🚨 OBTENEMOS EL CARRO Y LA FUNCIÓN DE LIMPIEZA 🚨
+  const { totalItems, clearCart } = useCart(); 
+  
   const categoriesToShow = fetchedCategories.filter(cat => 
       ['Deco Hogar', 'Cocina', 'Librería', 'Accesorios'].includes(cat.nombre)
   );
@@ -52,7 +55,7 @@ function Header() {
   const [anchorElProducts, setAnchorElProducts] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   
-  // --- Manejo del Menú de Productos (Abrir/Cerrar al hacer click) ---
+  // --- Manejo de Menús ---
   const handleOpenProductsMenu = (event) => {
     setAnchorElProducts(event.currentTarget);
   };
@@ -61,23 +64,30 @@ function Header() {
     setAnchorElProducts(null);
   };
   
-  // --- Manejo de Navegación y Filtro (CLAVE) ---
   const handleCategoryClick = (categoryName) => {
       handleCloseProductsMenu();
-      
       const regex = new RegExp("\\s", "g"); 
       const slug = categoryName.toLowerCase().replace(regex, '-'); 
-      
       navigate(`/productos?categoria=${slug}`); 
   };
 
-  // --- Manejo del Menú de Usuario ---
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  // --- LÓGICA DE LOGIN / LOGOUT (Modificado para pasar clearCart) ---
+  const handleAuthAction = (action) => {
+    handleCloseUserMenu();
+    if (action === 'login') {
+        navigate('/login');
+    } else if (action === 'logout') {
+        // 🚨 CAMBIO CLAVE: Pasamos clearCart a la función logout 🚨
+        logout(clearCart); 
+    }
   };
 
 
@@ -109,7 +119,7 @@ function Header() {
           {/* Enlaces de navegación Desktop */}
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
             
-            {/* Páginas estáticas */}
+            {/* Páginas estáticas y Categorías */}
             {pagesWithRoutes.map((page) => (
               <Button
                 key={page.name}
@@ -126,13 +136,13 @@ function Header() {
                 key="Categorias"
                 aria-controls={anchorElProducts ? 'simple-menu' : undefined}
                 aria-haspopup="true"
-                onClick={handleOpenProductsMenu} // Abre el menú al hacer clic
+                onClick={handleOpenProductsMenu}
                 sx={{ my: 2, color: 'white', display: 'block' }}
             >
                 Categorías
             </Button>
             
-            {/* --- MENÚ SIMPLE DINÁMICO --- */}
+            {/* --- MENÚ SIMPLE DINÁMICO (Categorías) --- */}
             <Menu
               id="simple-menu"
               anchorEl={anchorElProducts}
@@ -141,7 +151,6 @@ function Header() {
               MenuListProps={{
                 'aria-labelledby': 'basic-button',
               }}
-              // Aseguramos que el menú aparezca debajo del botón
               anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
               transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             >
@@ -151,37 +160,55 @@ function Header() {
               {!loading && categoriesToShow.length > 0 && categoriesToShow.map((category) => (
                 <MenuItem 
                     key={category.id} 
-                    onClick={() => handleCategoryClick(category.nombre)} // Navega al filtro
+                    onClick={() => handleCategoryClick(category.nombre)}
                 >
                     {category.nombre}
                 </MenuItem>
               ))}
-              
-              {!loading && categoriesToShow.length === 0 && (
-                  <MenuItem disabled>No hay categorías disponibles.</MenuItem>
-              )}
             </Menu>
             {/* ------------------------------------------- */}
 
           </Box>
 
-          {/* Íconos de Carrito y Configuración */}
+          {/* Íconos de Carrito, Autenticación y Configuración */}
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+            
+            {/* 🚨 BOTÓN DE LOGIN / LOGOUT DINÁMICO (Desktop) 🚨 */}
+            <Button
+                color="inherit"
+                variant="outlined"
+                size="small"
+                onClick={() => handleAuthAction(isAuthenticated ? 'logout' : 'login')}
+                startIcon={isAuthenticated ? <LogoutIcon /> : <LoginIcon />}
+                sx={{ 
+                    display: { xs: 'none', md: 'flex' }, 
+                    textTransform: 'none', 
+                    borderColor: 'white',
+                    color: 'white'
+                }}
+            >
+                {isAuthenticated ? 'Cerrar Sesión' : 'Iniciar Sesión'}
+            </Button>
+
+
             <Tooltip title="Ver carrito">
-              {/* 🚨 MODIFICADO: Usamos totalItems y onClick con navigate */}
               <IconButton 
                 color="inherit" 
-                onClick={() => navigate('/carrito')} // Redirige a la página del carrito
+                onClick={() => navigate('/carrito')}
               >
                 <Badge badgeContent={totalItems} color="error" max={99}> 
                   <ShoppingCartIcon />
                 </Badge>
               </IconButton>
             </Tooltip>
+            
             {/* Menú de Usuario (Configuración) */}
-            <Tooltip title="Abrir Configuración">
+            <Tooltip title={isAuthenticated && email ? email : "Abrir Configuración"}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Usuario" src="/images/avatar.jpeg" /> 
+                {/* Muestra la inicial del email si existe, o el icono de usuario */}
+                <Avatar alt="Usuario" sx={{ bgcolor: 'secondary.main' }}> 
+                    {isAuthenticated && email ? email[0].toUpperCase() : <AccountCircleIcon />}
+                </Avatar>
               </IconButton>
             </Tooltip>
             <Menu
@@ -199,6 +226,18 @@ function Header() {
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}
+              
+              {/* 🚨 Opción de Logout en el menú desplegable también 🚨 */}
+              <Divider />
+              <MenuItem onClick={() => handleAuthAction(isAuthenticated ? 'logout' : 'login')}>
+                <Typography 
+                    textAlign="center" 
+                    color={isAuthenticated ? 'error' : 'primary'}
+                >
+                    {isAuthenticated ? 'Cerrar Sesión' : 'Iniciar Sesión'}
+                </Typography>
+              </MenuItem>
+
             </Menu>
           </Box>
         </Toolbar>

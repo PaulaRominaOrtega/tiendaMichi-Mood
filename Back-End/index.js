@@ -1,15 +1,16 @@
-// =================================================================
-// 🚨 CONFIGURACIÓN DEL SERVIDOR CON EXPRESS Y SOCKET.IO 🚨
-// =================================================================
 const express = require("express");
-const http = require("http"); // ✅ Necesario para Socket.IO
-// 🚨 IMPORTAR la función de inicialización en lugar de la clase Server directamente
+const http = require("http");
+const passport = require('passport'); // 🚨 IMPORTACIÓN NECESARIA
+const session = require('express-session'); // 🚨 IMPORTACIÓN NECESARIA
 const { initializeSocket } = require("./server-config/socket"); 
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const path = require("path");
 require("dotenv").config();
+
+// 🚨 Asegúrate de que este archivo exista y configure tu estrategia de Google
+require('./config/passport-setup'); 
 
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 const { sequelize } = require("./models/index.model");
@@ -22,31 +23,47 @@ const chatRoutes = require('./routes/chat.routes.js');
 const authRoutes = require("./routes/auth.routes");
 
 const PORT = process.env.PORT || 3000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173"; // Asumiendo Vite
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const SESSION_SECRET = process.env.SESSION_SECRET || 'clave-secreta-por-defecto-si-no-hay-env'; // Usar variable de entorno
 
 const app = express();
-// 🚨 PASO 1: Crear el servidor HTTP montando la app Express
 const server = http.createServer(app); 
-
-// 🚨 CÓDIGO ELIMINADO: La inicialización directa de 'io' y su exportación se movieron a 'server-config/socket.js'
-// ------------------------------------------------------------------
-
 
 app.use(helmet());
 
-// Middleware de CORS para Express 
+// -------------------------------------------------------------------
+// 🚨 MODIFICACIÓN CLAVE: Configuración de CORS con Credenciales 🚨
+// -------------------------------------------------------------------
 app.use(
   cors({
-    origin: FRONTEND_URL, // Restringimos CORS a la URL de tu Front-End
+    origin: FRONTEND_URL, 
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true
+    credentials: true // Necesario para que Passport use cookies/sessions
   })
 );
 
 app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// -------------------------------------------------------------------
+// 🚨 CONFIGURACIÓN DE AUTENTICACIÓN: EXPRESS SESSION Y PASSPORT 🚨
+// -------------------------------------------------------------------
+
+// 1. Express Session (DEBE ir ANTES de Passport.initialize)
+app.use(session({
+    secret: SESSION_SECRET, // Usa la clave secreta de tu .env
+    resave: false,
+    saveUninitialized: false, 
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: 24 * 60 * 60 * 1000 // 1 día
+    } 
+}));
+
+// 2. Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session()); // Necesario si usas serialización/deserialización (Passport Sessions)
 
 // Middleware para Content-Security-Policy (para archivos estáticos)
 app.use((req, res, next) => {
@@ -59,9 +76,7 @@ app.use((req, res, next) => {
 // Servir archivos estáticos desde la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 🚨 CÓDIGO ELIMINADO: El log de conexión de Socket.IO se movió a 'server-config/socket.js'
-// ------------------------------------------------------------------
-
+// Ruta de salud
 app.get("/health", (req, res) => {
   res.json({
     success: true,
@@ -70,18 +85,13 @@ app.get("/health", (req, res) => {
     version: "1.0.0",
   });
 });
+app.use("/auth", authRoutes); 
 
-// router de productos
 app.use("/api/productos", productoRoutes);
-// router de categorías
 app.use("/api/categorias", categoriasRoutes);
-// router de clientes
 app.use("/api/clientes", clienteRoutes);
-// router de pedidos
 app.use("/api/pedidos", pedidoRoutes); 
 app.use('/api', chatRoutes);
-app.use('/api/auth', authRoutes); 
-
 app.use(notFound);
 app.use(errorHandler);
 
@@ -93,7 +103,6 @@ const initializeDatabase = async () => {
     console.log("✅ Tablas sincronizadas correctamente");
     console.log("📚 Tablas definidas:", Object.keys(sequelize.models));
     
-    // 🚨 PASO DE INICIALIZACIÓN CLAVE: Usamos la función importada
     initializeSocket(server); 
     console.log("🔌 Socket.IO inicializado y listo para escuchar");
     
@@ -105,11 +114,9 @@ const initializeDatabase = async () => {
 
 const startServer = async () => {
   await initializeDatabase();
-  // 🚨 Usar server.listen
   server.listen(PORT, () => {
     console.log(`🚀 Servidor EXPRESS & SOCKET.IO iniciado en el puerto: ${PORT}`);
     console.log(`📍 Salud de la API: http://localhost:${PORT}/health`);
-    console.log(`📖 API Pedidos: http://localhost:${PORT}/api/pedidos`); 
   });
 };
 

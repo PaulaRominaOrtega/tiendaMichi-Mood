@@ -21,11 +21,12 @@ const AdminLoginPage = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
-        email: formData.email,
-        password: formData.password,
-        tipo: 'administrador', // Le dice al backend que es un administrador
-      });
+      const response = await axios.post('http://localhost:3000/auth/login', {
+    email: formData.email,
+    password: formData.password,
+    tipo: 'administrador', 
+       }); 
+      
 
       if (response.data.success) {
         // Guarda el token en el almacenamiento local

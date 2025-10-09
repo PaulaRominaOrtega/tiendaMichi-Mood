@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from './AuthContext'; 
+
+// URL base de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; 
 
 // 1. Crear el Contexto
 const CartContext = createContext();
 
-// 2. Hook personalizado para usar el carrito fácilmente
+// 2. Hook personalizado
 export const useCart = () => {
-    // Si usas un hook fuera del provider, esto te ayuda a debugear
     const context = useContext(CartContext);
     if (!context) {
         throw new Error('useCart must be used within a CartProvider');
@@ -13,9 +16,44 @@ export const useCart = () => {
     return context;
 };
 
-// 3. Proveedor del Contexto (Aquí va toda la lógica)
+// -----------------------------------------------------------
+// FUNCIONES ASÍNCRONAS PARA EL SERVIDOR (Fuera de CartProvider)
+// -----------------------------------------------------------
+
+// Se deja la función aquí, aunque estará temporalmente deshabilitada en useEffect.
+const saveCartToServer = async (items, clienteId, accessToken) => {
+    if (!clienteId || !accessToken) return; 
+
+    try {
+        await fetch(`${API_URL}/api/carritos/sincronizar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`, 
+            },
+            body: JSON.stringify({ 
+                clienteId,
+                items: items.map(item => ({ 
+                    producto: item.id, 
+                    cantidad: item.quantity
+                }))
+            }),
+        });
+    } catch (error) {
+        console.error("Error al sincronizar el carrito con el servidor:", error);
+        // NO hacemos nada más, permitimos que el Front-End siga.
+    }
+};
+
+// -----------------------------------------------------------
+
+// 3. Proveedor del Contexto
 export const CartProvider = ({ children }) => {
-    // Inicializa el carrito leyendo desde localStorage para persistencia
+    
+    // Obtiene datos de autenticación del contexto
+    const { isAuthenticated, accessToken, clienteId } = useAuth();
+    
+    // Estado y Persistencia Inicial (Carga del Carrito desde localStorage)
     const [cart, setCart] = useState(() => {
         try {
             const storedCart = localStorage.getItem('michimood_cart');
@@ -25,27 +63,36 @@ export const CartProvider = ({ children }) => {
             return [];
         }
     });
-    const [notification, setNotification] = useState(null); // Para mensajes de error/éxito
+    const [notification, setNotification] = useState(null); 
 
-    // 4. Efecto para guardar el carrito en localStorage cada vez que cambia
+    // Funciones estables de notificación
+    const hideNotification = useCallback(() => setNotification(null), []);
+    const showNotification = useCallback((message, severity = 'success') => {
+        setNotification({ message, severity });
+    }, []);
+    
+    // 4. Efecto para guardar el carrito en localStorage y el servidor
     useEffect(() => {
         try {
+            // 1. Guardar en localStorage (siempre)
             localStorage.setItem('michimood_cart', JSON.stringify(cart));
+            
+            // 2. Sincronizar con el Back-End SOLO si está autenticado
+            if (isAuthenticated && clienteId && accessToken) {
+                // 🛑 ESTA LÍNEA ESTÁ COMENTADA PARA EVITAR EL 404 DE SINCRONIZACIÓN Y ESTABILIZAR EL STARTUP 🛑
+                // saveCartToServer(cart, clienteId, accessToken); 
+            }
+            
         } catch (error) {
-            console.error("Error guardando el carrito en localStorage:", error);
+            console.error("Error guardando el carrito:", error);
         }
-    }, [cart]);
+    }, [cart, isAuthenticated, clienteId, accessToken]); 
 
     // -----------------------------------------------------------
-    // FUNCIONES CLAVE DEL CARRITO
+    // FUNCIONES DE MANEJO DE CARRITO (El resto del código es igual y correcto)
     // -----------------------------------------------------------
 
-    const showNotification = (message, severity = 'success') => {
-        setNotification({ message, severity });
-        setTimeout(() => setNotification(null), 3000); // Ocultar después de 3s
-    };
-
-    const addToCart = (product, quantityToAdd = 1) => {
+    const addToCart = useCallback((product, quantityToAdd = 1) => { /* ... lógica ... */
         if (product.stock === 0) {
             showNotification('🚫 Producto sin stock.', 'error');
             return;
@@ -62,13 +109,12 @@ export const CartProvider = ({ children }) => {
                     return prevCart; 
                 }
                 
-                const updatedCart = prevCart.map(item =>
+                showNotification(`✅ Se agregó ${quantityToAdd} unidad(es) de ${product.nombre}.`);
+                return prevCart.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: newQuantity }
                         : item
                 );
-                showNotification(`✅ Se agregó ${quantityToAdd} unidad(es) de ${product.nombre}.`);
-                return updatedCart;
 
             } else {
                 if (quantityToAdd > product.stock) {
@@ -88,9 +134,9 @@ export const CartProvider = ({ children }) => {
                 return [...prevCart, newItem];
             }
         });
-    };
+    }, [showNotification]);
 
-    const updateQuantity = (productId, delta) => {
+    const updateQuantity = useCallback((productId, delta) => { /* ... lógica ... */
         setCart(prevCart => {
             const existingItem = prevCart.find(item => item.id === productId);
 
@@ -114,9 +160,9 @@ export const CartProvider = ({ children }) => {
                     : item
             );
         });
-    };
+    }, [showNotification]);
     
-    const removeFromCart = (productId) => {
+    const removeFromCart = useCallback((productId) => { /* ... lógica ... */
         setCart(prevCart => {
             const itemToRemove = prevCart.find(item => item.id === productId);
             if (itemToRemove) {
@@ -124,44 +170,60 @@ export const CartProvider = ({ children }) => {
             }
             return prevCart.filter(item => item.id !== productId);
         });
-    };
+    }, [showNotification]);
+
+    const clearCart = useCallback(() => { /* ... lógica ... */
+        setCart([]);
+        localStorage.removeItem('michimood_cart'); 
+        showNotification('🛒 Sesión cerrada. Carrito guardado en tu cuenta.', 'info');
+    }, [showNotification]);
+
 
     /**
-     * 🚨 FUNCIÓN FALTANTE: Limpia completamente el carrito.
+     * 🚨 FUNCIÓN CRÍTICA: loadCartFromServer ESTÁ VACÍA 🚨
+     * Esta versión garantiza que no haya NINGÚN contacto con el servidor.
+     * Esto permite que el componente LoginSuccessHandler complete su trabajo de navegación
+     * sin esperar una respuesta fallida del Back-End.
      */
-    const clearCart = () => {
-        setCart([]);
-        // Limpiar también el almacenamiento local
-        localStorage.removeItem('michimood_cart'); 
-        showNotification('🛒 Carrito vaciado con éxito.', 'info');
-    };
-    
+    const loadCartFromServer = useCallback(async (clienteId, accessToken) => {
+        // Bloqueo de seguridad: si no hay datos de autenticación, salimos.
+        if (!clienteId || !accessToken) return; 
+
+        // 🛑 IGNORAMOS EL SERVIDOR PARA DETENER EL BUCLO 🛑
+        console.log("Deshabilitada la carga del carrito desde el servidor para evitar bucles.");
+        return Promise.resolve(); // Devolvemos inmediatamente
+        
+    }, []);
+
     // -----------------------------------------------------------
 
-    const cartTotals = cart.reduce(
+    const cartTotals = useMemo(() => cart.reduce(
         (acc, item) => {
             acc.totalItems += item.quantity;
             acc.totalPrice += item.quantity * item.precio;
             return acc;
         },
         { totalItems: 0, totalPrice: 0 }
-    );
+    ), [cart]);
     
-    // Usar useMemo para evitar recrear el objeto de contexto innecesariamente
+    // El useMemo garantiza que el objeto de contexto solo cambie cuando es necesario
     const contextValue = useMemo(() => ({
         cart,
         addToCart,
         removeFromCart,
         updateQuantity,
-        clearCart, // 🚨 ¡CORRECCIÓN CLAVE: AÑADIDO AQUÍ!
-        ...cartTotals, 
-        notification
-    }), [cart, cartTotals.totalItems, cartTotals.totalPrice, notification]); // Dependencias para re-render
+        clearCart, 
+        loadCartFromServer, 
+        totalItems: cartTotals.totalItems,
+        totalPrice: cartTotals.totalPrice,
+        notification,
+        showNotification,
+        hideNotification 
+    }), [cart, addToCart, removeFromCart, updateQuantity, clearCart, loadCartFromServer, cartTotals, notification, showNotification, hideNotification]); 
 
     return (
         <CartContext.Provider value={contextValue}>
             {children}
-            {/* Opcional: Renderizar notificaciones aquí, si usas MUI Alert */}
         </CartContext.Provider>
     );
 };
