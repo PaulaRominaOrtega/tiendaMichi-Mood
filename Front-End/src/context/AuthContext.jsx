@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 
-// Asumiendo que esta URL es necesaria para el logout del Back-End
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; 
+// Se mantiene la API_URL por si se necesita para cualquier otra petición
+// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; 
 
 // 1. Crear el Contexto
 const AuthContext = createContext();
@@ -21,10 +21,14 @@ export const AuthProvider = ({ children }) => {
         accessToken: initialAccessToken || null,
         clienteId: initialClienteId || null,
         email: localStorage.getItem('email') || null,
+        // El refresh token no necesita estar en el estado, solo en localStorage
     }));
 
-    // Función para manejar el LOGIN
-    // 🚨 CAMBIO: Ahora acepta 'loadCartFromServer' como segundo argumento 🚨
+    /**
+     * Maneja el proceso de inicio de sesión, guarda tokens y datos del usuario.
+     * @param {object} tokenData - Contiene accessToken, refreshToken, clienteId, email.
+     * @param {function} loadCartFromServer - Función del CartContext para sincronizar.
+     */
     const login = (tokenData, loadCartFromServer) => { 
         // 1. Guardar en localStorage
         localStorage.setItem('accessToken', tokenData.accessToken);
@@ -32,7 +36,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('clienteId', tokenData.clienteId);
         localStorage.setItem('email', tokenData.email);
 
-        // 2. Actualizar el estado (esto dispara la re-renderización)
+        // 2. Actualizar el estado
         const newAuthData = {
             isAuthenticated: true, 
             accessToken: tokenData.accessToken,
@@ -41,16 +45,20 @@ export const AuthProvider = ({ children }) => {
         };
         setAuthData(newAuthData);
         
-        // 3. Cargar el carrito del servidor después de guardar el estado
+        // 3. Cargar el carrito del servidor
         if (loadCartFromServer) {
+            // El loadCartFromServer usará el nuevo accessToken y clienteId
             loadCartFromServer(tokenData.clienteId, tokenData.accessToken);
         }
     };
 
-    // Función para manejar el LOGOUT
-    // 🚨 CAMBIO: Ahora acepta 'clearCart' (que también guarda en el servidor) 🚨
-    const logout = (clearCartAndSave) => { 
-        // 1. Ejecutar la función de limpieza y guardado (proviene de CartContext, vía Header)
+    /**
+     * Maneja el proceso de cierre de sesión, limpia tokens y estado.
+     * @param {function} clearCartAndSave - Función del CartContext para limpiar y guardar el carrito.
+     * @param {string} type - Opcional. Indica el tipo de logout (e.g., 'google' para redireccionar).
+     */
+    const logout = (clearCartAndSave, type) => { 
+        // 1. Ejecutar la función de CartContext (limpieza y guardado)
         if (clearCartAndSave) {
             clearCartAndSave(); 
         }
@@ -69,16 +77,24 @@ export const AuthProvider = ({ children }) => {
             email: null,
         });
 
-        // 4. Redirigir al Back-End para cerrar la sesión de Passport
-        window.location.href = `${API_URL}/auth/logout`;
+        // 4. (Opcional) Redireccionar a la ruta de cierre de sesión del Back-End si es necesario
+        // Esto solo es crucial para proveedores de OAuth (como Google) para invalidar su sesión.
+        if (type === 'google') {
+            // **IMPORTANTE**: Define API_URL si usas esta lógica.
+            // window.location.href = `${API_URL}/auth/logout`; 
+        }
+        
+        // Si no es un logout de Google, React Router se encargará de la redirección
+        // (Por ejemplo, al Landing Page /)
     };
 
     
-    // Uso de useMemo
+    // Uso de useMemo para optimizar el contexto
     const value = useMemo(() => ({
         ...authData,
         login,
         logout,
+        // Opcional: Función para verificar si el token es válido/refrescar si fuera necesario
     }), [authData]); 
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

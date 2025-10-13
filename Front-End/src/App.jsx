@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CssBaseline, Box, Alert, Typography } from '@mui/material'; // Quitamos CircularProgress, no se usa aquí
+import { CssBaseline, Box, Alert, Typography } from '@mui/material';
 
 // === Importaciones de Componentes Públicos (Front-End/src/components) ===
 import Header from './components/Header';
@@ -15,7 +15,7 @@ import ContactoPage from './components/ContactoPage';
 import OrderConfirmationPage from './components/OrderConfirmationPage'; 
 import LoginPage from './components/LoginPage'; 
 import LoginSuccessHandler from './components/LoginSuccessHandler'; 
-// Nota: Hero y FilterBar estaban importados pero no usados en las rutas, se mantienen en caso de que los uses en otras páginas.
+import RegisterPage from './components/RegisterPage'; // 👈 ¡NUEVA IMPORTACIÓN!
 
 
 // === Importaciones de Componentes de Administración (Front-End/src/Admin/...) ===
@@ -41,7 +41,7 @@ const PrivateAdminRoute = ({ children }) => {
 
 // Componente para mostrar las notificaciones del carrito
 const NotificationBar = () => {
-    // 1. 🚨 Los Hooks se llaman SIEMPRE al inicio y sin condiciones 🚨
+    // 1. Los Hooks se llaman SIEMPRE al inicio y sin condiciones
     const { notification, hideNotification } = useCart(); 
 
     // 2. El useEffect también se llama SIEMPRE
@@ -55,7 +55,7 @@ const NotificationBar = () => {
         }
     }, [notification, hideNotification]);
     
-    // 3. El renderizado condicional ocurre AL FINAL del componente, después de los Hooks
+    // 3. El renderizado condicional ocurre AL FINAL del componente
     if (!notification) {
         return null;
     }
@@ -119,16 +119,23 @@ function App() {
                         <Route path="pedidos/editar/:id" element={<PedidoForm />} />
                     </Route>
 
-                    {/* === Rutas Públicas === */}
+                    {/* === Rutas Públicas de Autenticación === */}
                     <Route path="/login" element={
                         <MainLayout>
                             <LoginPage /> 
                         </MainLayout>
                     } />
                     
+                    <Route path="/register" element={ // 👈 ¡NUEVA RUTA DE REGISTRO!
+                        <MainLayout>
+                            <RegisterPage /> 
+                        </MainLayout>
+                    } />
+
                     {/* Ruta de manejo de redirección exitosa de Google/OAuth */}
                     <Route path="/login-success" element={<LoginSuccessHandler />} /> 
                     
+                    {/* === Rutas Públicas de Navegación === */}
                     <Route path="/" element={
                         <MainLayout>
                             <Banner />

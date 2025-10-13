@@ -85,7 +85,7 @@ app.get("/health", (req, res) => {
     version: "1.0.0",
   });
 });
-app.use("/auth", authRoutes); 
+app.use("/api/auth", authRoutes);
 
 app.use("/api/productos", productoRoutes);
 app.use("/api/categorias", categoriasRoutes);

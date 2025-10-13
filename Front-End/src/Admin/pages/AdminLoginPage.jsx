@@ -21,17 +21,15 @@ const AdminLoginPage = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
-    email: formData.email,
-    password: formData.password,
-    tipo: 'administrador', 
-       }); 
-      
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
+        email: formData.email,
+        password: formData.password,
+        tipo: 'administrador',
+      });
+
 
       if (response.data.success) {
-        // Guarda el token en el almacenamiento local
-        localStorage.setItem('adminToken', response.data.data.accessToken);
-        // Redirige al panel de administración
+        localStorage.setItem('adminToken', response.data.accessToken);
         navigate('/admin');
       }
     } catch (err) {
