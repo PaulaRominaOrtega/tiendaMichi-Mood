@@ -17,7 +17,7 @@ router.get("/", validatePagination, productoController.getProductos);
 // GET /api/productos/:id - Obtener un producto por ID
 router.get("/:id", validateProductoId, productoController.getProducto);
 
-// ------------------- Rutas Protegidas para Administradores -------------------
+// rutas Protegidas para adminin
 
 // POST /api/productos - Crear un nuevo producto (con subida de archivos)
 router.post(
@@ -28,7 +28,7 @@ router.post(
     productoController.createProducto
 );
 
-// PUT /api/productos/:id - Actualizar un producto (SIN subida de archivos)
+// PUT /api/productos/:id - Actualizar un producto
 router.put(
     "/:id", 
     verificarJWTAdmin, 

@@ -21,7 +21,6 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// 🚨 MODIFICACIÓN CLAVE: Usamos la sintaxis de VITE (import.meta.env)
 const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const DEFAULT_IMAGE_PATH = '/images/default.jpg'; 
 
@@ -30,7 +29,6 @@ const getFirstImageUrl = (imageString) => {
     if (!imageString) return DEFAULT_IMAGE_PATH;
     const imageNames = imageString.split(',');
     const firstName = imageNames[0].trim();
-    // Asegúrate de usar la URL base correcta
     return firstName 
       ? `${BACKEND_BASE_URL}/uploads/${firstName}` 
       : DEFAULT_IMAGE_PATH;
@@ -46,50 +44,41 @@ const CartPage = () => {
         clearCart, 
     } = useCart();
     
-    // 🚨 EXTRAEMOS LA INFORMACIÓN DE AUTENTICACIÓN 🚨
     const { isAuthenticated, clienteId, email } = useAuth(); 
 
     const navigate = useNavigate(); 
     const [isLoading, setIsLoading] = useState(false);
-    const [notification, setNotification] = useState({ message: '', severity: '' }); // Para mensajes de error/bloqueo
+    const [notification, setNotification] = useState({ message: '', severity: '' }); 
     
 
-    // FUNCIÓN PRINCIPAL DE CHECKOUT
     const handleCheckout = async () => {
         
-        // 1. Validación inicial
         if (cart.length === 0) return;
         
-        // 🚨 RESTRICCIÓN DE AUTENTICACIÓN (Bloqueo si no hay sesión) 🚨
         if (!isAuthenticated || !clienteId) { 
              setNotification({ message: "Debes iniciar sesión para completar la compra.", severity: "warning" });
-             // Redirige al login después de un pequeño retraso
              setTimeout(() => navigate('/login'), 1500); 
-             return; // DETIENE la ejecución de la compra
+             return; 
         }
 
         setIsLoading(true);
-        setNotification({ message: '', severity: '' }); // Limpiar notificaciones previas
-
-        // 2. Formatear la carga útil (Payload)
+        setNotification({ message: '', severity: '' }); 
         const orderPayload = {
-            // 🚨 USAMOS EL ID REAL DEL CLIENTE LOGEADO 🚨
+        
             idCliente: clienteId, 
             total: totalPrice,
             items: cart.map(item => ({
                 productoId: item.id,
                 cantidad: item.quantity,
                 precioUnitario: item.precio,
-                nombre: item.nombre, // Necesario para el email de confirmación
+                nombre: item.nombre, 
             })),
         };
 
         try {
-            // 3. Enviar el pedido al Back-End
-            // 🚨 OPCIONAL: Si necesitas enviar el token, usa axios.create() o pásalo en headers
+
             const response = await axios.post(`${BACKEND_BASE_URL}/api/pedidos`, orderPayload);
             
-            // 4. Éxito: Limpiar carrito y redirigir
             clearCart(); 
             
             navigate('/confirmacion-pedido', { 
@@ -113,12 +102,8 @@ const CartPage = () => {
             setIsLoading(false);
         }
     };
-    // ------------------------------------
-
-    // Comprobar si hay ítems con stock excedido
     const hasStockError = cart.some(item => item.quantity > item.stock);
     
-    // REDIRECCIÓN SI EL CARRITO ESTÁ VACÍO
     if (cart.length === 0) {
         return (
             <Container maxWidth="md" sx={{ py: 5, textAlign: 'center' }}>
@@ -140,7 +125,6 @@ const CartPage = () => {
             </Typography>
             <Divider sx={{ mb: 4 }} />
 
-            {/* Muestra notificaciones de bloqueo/error */}
             {notification.message && (
                 <Alert severity={notification.severity} sx={{ mb: 3 }}>
                     {notification.message}
@@ -154,7 +138,6 @@ const CartPage = () => {
             )}
 
             <Grid container spacing={4}>
-                {/* Columna de Productos */}
                 <Grid item xs={12} md={8}>
                     {cart.map((item) => (
                         <Card key={item.id} sx={{ display: 'flex', mb: 2, boxShadow: 1 }}>
@@ -178,14 +161,13 @@ const CartPage = () => {
                                 </CardContent>
                             </Box>
                             
-                            {/* Control de Cantidad y Precio */}
                             <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                                     <IconButton 
                                         onClick={() => updateQuantity(item.id, -1)} 
                                         color="primary"
                                         size="small"
-                                        disabled={item.quantity <= 1} // No permitir menos de 1
+                                        disabled={item.quantity <= 1}
                                     >
                                         <RemoveIcon />
                                     </IconButton>
@@ -215,7 +197,6 @@ const CartPage = () => {
                     ))}
                 </Grid>
 
-                {/* Columna de Resumen (Sidebar) */}
                 <Grid item xs={12} md={4}>
                     <Card elevation={3}>
                         <CardContent>
@@ -229,7 +210,7 @@ const CartPage = () => {
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                 <Typography variant="body1">Costo de Envío:</Typography>
-                                <Typography variant="body1">A calcular</Typography>
+                                <Typography variant="body1">Gratis</Typography>
                             </Box>
                             <Divider sx={{ my: 1 }} />
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -243,7 +224,6 @@ const CartPage = () => {
                                 fullWidth 
                                 sx={{ mt: 3, py: 1.5 }}
                                 onClick={handleCheckout} 
-                                // Bloquea si está cargando, hay error de stock O NO está autenticado
                                 disabled={isLoading || hasStockError || !isAuthenticated} 
                                 startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
                             >

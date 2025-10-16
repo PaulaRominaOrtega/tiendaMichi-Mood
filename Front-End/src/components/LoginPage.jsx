@@ -1,52 +1,43 @@
-// src/components/LoginPage.jsx (CORREGIDO)
+// src/components/LoginPage.jsx 
 import React, { useState } from 'react';
-// 🚨 Importamos Alert 🚨
-import { Box, Typography, Container, Button, TextField, Paper, Divider, Alert } from '@mui/material'; 
+import { Box, Typography, Container, Button, TextField, Paper, Divider, Alert } from '@mui/material';
 import { Google as GoogleIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
-const GOOGLE_AUTH_URL = "http://localhost:3000/auth/google"; 
-const LOCAL_LOGIN_URL = "http://localhost:3000/api/auth/login"; 
+const GOOGLE_AUTH_URL = "http://localhost:3000/api/auth/google";
+const LOCAL_LOGIN_URL = "http://localhost:3000/api/auth/login";
 
 const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
-    
-    // Estados para el formulario de login local
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Manejador para el login estándar (Email/Password)
     const handleLocalLogin = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            // 1. Llamada al Backend para autenticación
             const response = await fetch(LOCAL_LOGIN_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // 🚨 MANTENEMOS: 'email' y 'password'. Si tu backend usa otros nombres (ej. 'correo', 'clave'), cámbialo aquí.
                 body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                // Si el backend devuelve un 401, 403, etc.
                 throw new Error(data.message || 'Error al iniciar sesión. Verifica tus credenciales.');
             }
-            
-            // 2. Si es exitoso
-            login(data); 
 
-            // 3. Redirigir a la página principal
+            login(data);
             navigate('/', { replace: true });
 
         } catch (err) {
@@ -55,10 +46,10 @@ const LoginPage = () => {
             setLoading(false);
         }
     };
-    
-    // Manejador para el login de Google
+
     const handleGoogleLogin = () => {
-        window.location.href = GOOGLE_AUTH_URL;
+
+        window.location.href = 'http://localhost:3000/api/auth/google?prompt=select_account';
     };
 
     return (
@@ -67,12 +58,8 @@ const LoginPage = () => {
                 <Typography variant="h5" component="h1" gutterBottom textAlign="center" sx={{ fontWeight: 600 }}>
                     Inicia Sesión en MichiMood
                 </Typography>
-                
-                {/* Mostrar Error */}
-                {/* 🚨 Ahora Alert está definido 🚨 */}
                 {error && <Box sx={{ mb: 2 }}><Alert severity="error">{error}</Alert></Box>}
 
-                {/* === Formulario de Login Estándar === */}
                 <Box component="form" onSubmit={handleLocalLogin} noValidate sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"
@@ -102,37 +89,35 @@ const LoginPage = () => {
                         type="submit"
                         fullWidth
                         variant="contained"
-                        sx={{ mt: 3, mb: 2, bgcolor: '#ffb6c1', '&:hover': { bgcolor: '#dda0dd' } }}
+                        sx={{ mt: 3, mb: 2, bgcolor: '#f350f3', '&:hover': { bgcolor: '#dda0dd' } }}
                         disabled={loading}
                     >
                         {loading ? 'Iniciando...' : 'Iniciar Sesión'}
                     </Button>
                 </Box>
-                
+
                 <Divider sx={{ my: 3 }}>o</Divider>
 
-                {/* === Botón de Login de Google === */}
                 <Button
                     fullWidth
                     variant="outlined"
                     startIcon={<GoogleIcon />}
                     onClick={handleGoogleLogin}
-                    sx={{ mb: 1, color: '#8b4513', borderColor: '#8b4513' }}
+                    sx={{ mb: 1, color: '#9836d1', borderColor: '#9836d1' }}
                     disabled={loading}
                 >
                     Continuar con Google
                 </Button>
-                
-                {/* Enlace para registrarse */}
+
                 <Box textAlign="center" sx={{ mt: 2 }}>
                     <Typography variant="body2">
                         ¿Nuevo en MichiMood?{' '}
-                        <Link to="/register" style={{ color: '#dda0dd', textDecoration: 'none', fontWeight: 600 }}>
+                        <Link to="/register" style={{ color: '#e858e8', textDecoration: 'none', fontWeight: 600 }}>
                             Regístrate
                         </Link>
                     </Typography>
                 </Box>
-                
+
             </Paper>
         </Container>
     );

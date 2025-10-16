@@ -25,7 +25,6 @@ const useCategories = () => {
         if (data.success && Array.isArray(data.data)) {
             setCategories(data.data); 
         } else {
-            // Esto capturaría si la respuesta es exitosa pero no contiene el campo 'data' o es vacío.
             setCategories([]); 
             if (data.success) {
                console.warn("API de categorías devolvió una respuesta exitosa, pero el array de datos está vacío.");

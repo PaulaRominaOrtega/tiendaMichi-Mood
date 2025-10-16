@@ -1,6 +1,6 @@
 const { Pedido, Cliente, PedidoProducto, Producto } = require("../models/index.model");
 const { validationResult } = require('express-validator');
-const { getSocketInstance } = require('../server-config/socket'); 
+const { getSocketInstance } = require('../server-config/socket');
 const { sendNewOrderEmail } = require('../services/emailService'); 
 
 // Obtener todos los pedidos
@@ -122,7 +122,7 @@ const createPedido = async (req, res) => {
 
         transaction = await Pedido.sequelize.transaction();
 
-        // 1. Crear el Pedido (Encabezado)
+        // Crear el Pedid
         const nuevoPedido = await Pedido.create({
             idCliente,
             total,
@@ -174,15 +174,19 @@ const createPedido = async (req, res) => {
         
         const io = getSocketInstance(); 
         if (io) {
-            io.emit('nuevo_pedido', { 
+            // Evento nuevoPedido
+            io.emit('nuevoPedido', { 
                 message: 'Nuevo pedido entrante', 
                 pedidoId: pedidoId,
                 total: total,
             });
-            console.log(`Socket.IO: Evento 'nuevo_pedido' emitido para el ID: ${pedidoId}`);
+            console.log(`Socket.IO: Evento 'nuevoPedido' emitido para el ID: ${pedidoId}`);
         } else {
              console.warn("Socket.IO no está disponible. No se pudo enviar la notificación en tiempo real.");
         }
+        // ----------------------------------------------------
+
+
         if (sendNewOrderEmail) {
             const cliente = await Cliente.findByPk(idCliente);
             
@@ -212,7 +216,7 @@ const createPedido = async (req, res) => {
         });
 
     } catch (err) {
-        // Revertir la transacción si algo falló
+        
         if (transaction) await transaction.rollback();
         
         console.error("Error en createPedido:", err);
@@ -271,6 +275,47 @@ const updatePedido = async (req, res) => {
     }
 };
 
+
+const actualizarEstadoPedido = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado } = req.body; 
+
+        if (!estado) {
+            return res.status(400).json({
+                success: false,
+                error: "El nuevo estado del pedido es requerido."
+            });
+        }
+
+        const [filasActualizadas, pedidosActualizados] = await Pedido.update(
+            { estado: estado },
+            { where: { id: id }, returning: true } 
+        );
+
+        if (filasActualizadas === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "Pedido no encontrado o estado ya actualizado."
+            });
+        }
+       
+        res.json({
+            success: true,
+            data: pedidosActualizados[0],
+            message: "Estado del pedido actualizado exitosamente"
+        });
+
+    } catch (err) {
+        console.error("Error en actualizarEstadoPedido:", err);
+        res.status(500).json({
+            success: false,
+            error: "Error interno del servidor",
+            message: "No se pudo actualizar el estado del pedido"
+        });
+    }
+};
+
 // Eliminar un pedido-soft delete
 const deletePedido = async (req, res) => {
     try {
@@ -283,19 +328,19 @@ const deletePedido = async (req, res) => {
                 error: "Pedido no encontrado"
             });
         }
-
-        await pedido.update({ estado: false });
+        
+        await pedido.update({ estado: 'Eliminado' }); 
 
         res.json({
             success: true,
-            message: "Pedido eliminado exitosamente"
+            message: "Pedido marcado como eliminado exitosamente"
         });
     } catch (err) {
         console.error("Error en deletePedido:", err);
         res.status(500).json({
             success: false,
             error: "Error interno del servidor",
-            message: "No se pudo eliminar el pedido"
+            message: "No se pudo eliminar el pedido. Podría haber restricciones de la base de datos."
         });
     }
 };
@@ -305,5 +350,6 @@ module.exports = {
     getPedido,
     createPedido,
     updatePedido,
+    actualizarEstadoPedido, 
     deletePedido
 };

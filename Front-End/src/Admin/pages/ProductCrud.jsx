@@ -15,7 +15,7 @@ const ProductCrud = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get('/productos'); // Usamos 'api' en lugar de 'axios'
+      const response = await api.get('/productos');
       setProducts(response.data.data); 
       setIsFormVisible(false);
     } catch (error) {
@@ -26,7 +26,7 @@ const ProductCrud = () => {
   const handleDelete = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       try {
-        await api.delete(`/productos/${productId}`); // Usamos 'api' en lugar de 'axios'
+        await api.delete(`/productos/${productId}`);
         fetchProducts();
       } catch (error) {
         console.error("Error deleting product:", error);

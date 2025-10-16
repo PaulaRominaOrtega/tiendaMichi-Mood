@@ -157,7 +157,7 @@ const updateCarritoProducto = async (req, res) => {
   }
 };
 
-// Eliminar registro (soft delete o hard delete)
+// Eliminar registro (soft delete )
 const deleteCarritoProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,11 +170,6 @@ const deleteCarritoProducto = async (req, res) => {
         error: "Carrito-producto no encontrado",
       });
     }
-
-    // Soft delete:
-    // await registro.update({ activo: false });
-
-    // Hard delete:
     await registro.destroy();
 
     res.json({

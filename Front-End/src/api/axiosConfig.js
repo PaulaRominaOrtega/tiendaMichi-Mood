@@ -1,10 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // Tu URL base
+  baseURL: 'http://localhost:3000/api', 
 });
 
-// Interceptor para incluir el token en cada solicitud
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('adminToken');

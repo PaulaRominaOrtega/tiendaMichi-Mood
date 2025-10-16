@@ -1,36 +1,96 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { IoTrash } from 'react-icons/io5'; 
 
 const PedidoCrud = () => {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    
     useEffect(() => {
         fetchPedidos();
     }, []);
 
     const fetchPedidos = async () => {
+        const token = localStorage.getItem('adminToken'); 
+
+        if (!token) {
+            setError("Error: No está autenticado. Por favor, inicie sesión nuevamente.");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
-            const response = await axios.get("http://localhost:3000/api/pedidos");
+            const response = await axios.get("http://localhost:3000/api/pedidos", {
+                headers: {
+                    Authorization: `Bearer ${token}` 
+                }
+            });
+            
             setPedidos(response.data.data);
             setLoading(false);
+            setError(null); 
         } catch (err) {
-            setError("Error al obtener los pedidos. Por favor, intente de nuevo.");
+            console.error("Detalle del Error al obtener pedidos:", err.response ? err.response.data : err.message);
+            setError("Error al obtener los pedidos. Verifique su conexión y autenticación.");
             setLoading(false);
+            setPedidos([]);
         }
     };
+    
+    const handleEstadoUpdate = async (id, estadoActual) => {
+        const token = localStorage.getItem('adminToken'); 
+        if (!token) return setError("No está autenticado.");
+
+        const estado = estadoActual ? estadoActual.toUpperCase() : 'PENDIENTE';
+        let nuevoEstado;
+
+        if (estado === 'PENDIENTE') {
+            nuevoEstado = 'En Proceso de Envío';
+        } else if (estado === 'EN PROCESO DE ENVÍO') {
+            nuevoEstado = 'Entregado';
+        } else {
+            nuevoEstado = 'Pendiente';
+        }
+        
+        const confirmUpdate = window.confirm(`¿Cambiar el estado del pedido #${id} a "${nuevoEstado}"?`);
+        if (!confirmUpdate) return;
+
+        try {
+            await axios.put(`http://localhost:3000/api/pedidos/estado/${id}`, {
+                estado: nuevoEstado
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            fetchPedidos();
+        } catch (err) {
+            console.error("Error al actualizar estado:", err);
+            setError("Error al actualizar el estado. (Asegúrese de que el endpoint PUT en su backend exista: /api/pedidos/estado/:id)");
+        }
+    };
+
 
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm("¿Estás seguro de que quieres eliminar este pedido?");
         if (confirmDelete) {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                setError("No se puede eliminar: Sesión expirada.");
+                return;
+            }
+
             try {
-                await axios.delete(`http://localhost:3000/api/pedidos/${id}`);
+                await axios.delete(`http://localhost:3000/api/pedidos/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
                 fetchPedidos();
             } catch (err) {
-                setError("Error al eliminar el pedido.");
+                setError("Error al eliminar el pedido. Esto puede ser una restricción de la base de datos (Clave Foránea).");
             }
         }
     };
@@ -41,56 +101,73 @@ const PedidoCrud = () => {
 
     return (
         <div className="container mx-auto p-4 bg-gray-100 rounded-lg shadow-lg">
+            
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Gestión de Pedidos</h2>
             
             <div className="overflow-x-auto">
+
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                     <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                         <tr>
                             <th className="py-3 px-6 text-left">ID</th>
-                            <th className="py-3 px-6 text-left">Cliente</th>
-                            <th className="py-3 px-6 text-left">Fecha</th>
-                            <th className="py-3 px-6 text-left">Total</th>
-                            <th className="py-3 px-6 text-left">Estado</th>
-                            <th className="py-3 px-6 text-center">Acciones</th>
+                            <th className="py-3 px-6 text-left">CLIENTE</th>
+                            <th className="py-3 px-6 text-left">FECHA</th>
+                            <th className="py-3 px-6 text-left">TOTAL</th>
+                            <th className="py-3 px-6 text-center">ESTADO</th>
+                            <th className="py-3 px-6 text-center">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody className="text-gray-600 text-sm font-light">
-                        {pedidos.map((pedido) => (
-                            <tr key={pedido.id} className="border-b border-gray-200 hover:bg-gray-100">
-                                <td className="py-3 px-6 text-left whitespace-nowrap">{pedido.id}</td>
-                                <td className="py-3 px-6 text-left">{pedido.cliente?.nombre || 'N/A'}</td>
-                                <td className="py-3 px-6 text-left">{new Date(pedido.fecha).toLocaleDateString()}</td>
-                                <td className="py-3 px-6 text-left">${pedido.total}</td>
-                                <td className="py-3 px-6 text-left">
-                                    <span className={`px-2 py-1 font-semibold leading-tight rounded-full ${pedido.estado ? 'bg-green-200 text-green-900' : 'bg-red-200 text-red-900'}`}>
-                                        {pedido.estado ? "Activo" : "Inactivo"}
-                                    </span>
-                                </td>
-                                <td className="py-3 px-6 text-center">
-                                    <div className="flex item-center justify-center">
-                                        <Link 
-                                            to={`/admin/pedidos/editar/${pedido.id}`}
-                                            className="w-4 mr-2 transform hover:text-blue-500 hover:scale-110"
-                                            title="Editar"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                            </svg>
-                                        </Link>
-                                        <button 
-                                            onClick={() => handleDelete(pedido.id)}
-                                            className="w-4 mr-2 transform hover:text-red-500 hover:scale-110"
-                                            title="Eliminar"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {pedidos.map((pedido) => {
+                            const estadoVisual = pedido.estado ? pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1) : 'Pendiente';
+                            
+                            let estadoClase = 'bg-gray-100 text-gray-800'; 
+                            if (estadoVisual.includes('Pendiente')) {
+                                estadoClase = 'bg-red-100 text-red-800';
+                            } else if (estadoVisual.includes('Envío')) {
+                                estadoClase = 'bg-yellow-100 text-yellow-800';
+                            } else if (estadoVisual.includes('Entregado')) {
+                                estadoClase = 'bg-green-100 text-green-800';
+                            }
+
+                            return (
+                                <tr key={pedido.id} className="border-b border-gray-200 hover:bg-gray-100">
+                                    <td className="py-3 px-6 text-left whitespace-nowrap">{pedido.id}</td>
+                                    
+                                    <td className="py-3 px-6 text-left">
+                                        {pedido.cliente ? pedido.cliente.nombre : "Cliente no encontrado"}
+                                    </td>
+                                    
+                                    <td className="py-3 px-6 text-left">{new Date(pedido.fecha).toLocaleDateString()}</td>
+                                    <td className="py-3 px-6 text-left">${pedido.total.toFixed(2)}</td>
+                                    
+                                    <td className="py-3 px-6 text-center">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${estadoClase}`}>
+                                            {estadoVisual}
+                                        </span>
+                                    </td>
+                                    
+                                    <td className="py-3 px-6 text-center">
+                                        <div className="flex item-center justify-center space-x-3">
+                                            <button
+                                                onClick={() => handleEstadoUpdate(pedido.id, pedido.estado)}
+                                                className="text-indigo-600 transform hover:text-indigo-800 hover:scale-110 transition duration-150"
+                                                title={`Estado actual: ${estadoVisual}. Click para cambiar.`}
+                                            >
+                                                <span className="text-xs font-medium">Editar Estado</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(pedido.id)}
+                                                className="text-red-500 transform hover:text-red-700 hover:scale-110 transition duration-150"
+                                                title="Eliminar"
+                                            >
+                                                <IoTrash className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

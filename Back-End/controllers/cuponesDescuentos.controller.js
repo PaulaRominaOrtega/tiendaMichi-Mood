@@ -171,7 +171,7 @@ const updateCupon = async (req, res) => {
   }
 };
 
-// Eliminar un cupón (soft delete → marcar inactivo)
+// Eliminar un cupón 
 const deleteCupon = async (req, res) => {
   try {
     const { id } = req.params;

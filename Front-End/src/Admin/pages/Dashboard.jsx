@@ -4,7 +4,6 @@ import React from 'react';
 const Dashboard = () => {
   return (
     <div>
-      <p>Bienvenido Admin!!!</p>
     </div>
   );
 };

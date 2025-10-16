@@ -16,7 +16,7 @@ const ClienteForm = ({ show, handleClose, handleSave, cliente }) => {
         nombre: cliente.nombre || '',
         telefono: cliente.telefono || '',
         email: cliente.email || '',
-        contrasena: '', // Mantener la contraseña vacía al editar
+        contrasena: '', 
       });
     } else {
       setFormData({
@@ -36,19 +36,16 @@ const ClienteForm = ({ show, handleClose, handleSave, cliente }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Crear un objeto con los datos a enviar
       const dataToSend = { ...formData };
 
-      // Lógica condicional para manejar la contraseña
       if (cliente) {
-        // Modo de edición: Si la contraseña está vacía, no la enviamos al backend.
         if (dataToSend.contrasena === '') {
           delete dataToSend.contrasena;
         }
         await axios.put(`http://localhost:3000/api/clientes/${cliente.id}`, dataToSend);
         alert('Cliente editado con éxito.');
       } else {
-        // Modo de creación: La contraseña es obligatoria.
+
         await axios.post('http://localhost:3000/api/clientes', dataToSend);
         alert('Cliente agregado con éxito.');
       }
@@ -59,7 +56,6 @@ const ClienteForm = ({ show, handleClose, handleSave, cliente }) => {
     }
   };
   
-  // El resto de tu componente...
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75">
@@ -116,7 +112,7 @@ const ClienteForm = ({ show, handleClose, handleSave, cliente }) => {
                 name="contrasena"
                 value={formData.contrasena}
                 onChange={handleChange}
-                required={!cliente} // La contraseña solo es requerida al crear un nuevo cliente
+                required={!cliente} 
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

@@ -13,7 +13,6 @@ import {
   Divider,
   IconButton,
   Alert,
-  // 🚨 Añadimos InputBase si quieres control de cantidad, aunque lo haremos simple por ahora
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -21,12 +20,8 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';     
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-
-// 🚨 IMPORTACIÓN CLAVE: El hook para usar el carrito
 import { useCart } from '../context/CartContext'; 
-// --------------------------------------------------
 
-// URL base del backend
 const BACKEND_BASE_URL = 'http://localhost:3000'; 
 const DEFAULT_IMAGE_PATH = '/images/default.jpg'; 
 
@@ -37,9 +32,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // 🚨 Usamos el hook del carrito para acceder a la función 'addToCart'
+  
   const { addToCart } = useCart(); 
-  // -----------------------------------------------------------------
 
   const sliderRef = useRef(null);
 
@@ -53,7 +47,6 @@ const ProductDetail = () => {
       const response = await axios.get(`${BACKEND_BASE_URL}/api/productos/${id}`);
       const data = response.data.data;
 
-      // LÓGICA DE CORRECCIÓN: Separar el string de imágenes y construir las URLs
       let imageUrls = [];
       if (typeof data.imagen === 'string' && data.imagen.length > 0) {
         imageUrls = data.imagen
@@ -80,7 +73,6 @@ const ProductDetail = () => {
     }
   };
 
-  // FUNCIONES PARA CONTROLAR EL SLIDER
   const goToNext = () => {
     sliderRef.current.slickNext();
   };
@@ -89,17 +81,12 @@ const ProductDetail = () => {
     sliderRef.current.slickPrev();
   };
 
-  // 🚨 FUNCIÓN CORREGIDA: Agrega el producto al contexto del carrito
   const handleAddToCart = () => {
     if (product && product.stock > 0) {
-        // Pasamos el objeto product completo al contexto
-        addToCart(product, 1); // Agregamos 1 unidad por defecto
+        addToCart(product, 1); 
     }
   };
-  // -------------------------------------------------------------
 
-  // Configuramos el carrusel para que no muestre flechas internas 
-  // ya que usaremos botones externos
   const carouselSettings = {
     dots: true,
     infinite: false, 
@@ -133,10 +120,9 @@ const ProductDetail = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Botón de regreso */}
       <Box sx={{ mb: 3 }}>
         <IconButton
-          onClick={() => navigate('/productos')} // Navega a la lista de productos
+          onClick={() => navigate('/productos')}
           sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
         >
           <ArrowBackIcon />
@@ -144,7 +130,6 @@ const ProductDetail = () => {
       </Box>
 
       <Grid container spacing={4}>
-        {/* Columna de imágenes */}
         <Grid item xs={12} md={6}>
           <Card elevation={3}>
             <Box sx={{ p: 2 }}>
@@ -155,7 +140,6 @@ const ProductDetail = () => {
                   position: 'relative' 
                 }}
               >
-                {/* RENDERIZACIÓN DEL SLIDER CON LA REFERENCIA */}
                 <Slider {...carouselSettings} ref={sliderRef}>
                   {displayImageUrls.map((url, idx) => (
                     <Box key={idx}>
@@ -177,7 +161,6 @@ const ProductDetail = () => {
                   ))}
                 </Slider>
                 
-                {/* BOTONES DE NAVEGACIÓN MANUAL */}
                 {displayImageUrls.length > 1 && (
                     <Box 
                         sx={{ 
@@ -204,13 +187,12 @@ const ProductDetail = () => {
                         </IconButton>
                     </Box>
                 )}
-                {/* ------------------------------------------- */}
+              
               </Box>
             </Box>
           </Card>
         </Grid>
 
-        {/* Columna de información */}
         <Grid item xs={12} md={6}>
           <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ mb: 3 }}>
@@ -252,7 +234,7 @@ const ProductDetail = () => {
                 size="large"
                 fullWidth
                 startIcon={<ShoppingCartIcon />}
-                onClick={handleAddToCart} // 🚨 Usamos la función del contexto
+                onClick={handleAddToCart} 
                 disabled={product.stock === 0}
                 sx={{ py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
               >

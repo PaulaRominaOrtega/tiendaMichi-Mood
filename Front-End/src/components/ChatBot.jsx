@@ -6,7 +6,6 @@ const Chatbot = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
 
-    // Agrega el useEffect para el mensaje de bienvenida
     useEffect(() => {
         if (isOpen && messages.length === 0) {
             const welcomeMessage = {
@@ -23,24 +22,30 @@ const Chatbot = () => {
         const userMessage = { text: input, from: 'user' };
         setMessages(prevMessages => [...prevMessages, userMessage]);
 
-        const API_URL = 'http://localhost:3000/api/chat'; 
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    message: input, 
-                    userId: 'tu-id-de-usuario',
-                    sessionId: 'tu-id-de-sesion'
+                body: JSON.stringify({
+                    message: input
                 }),
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
-            const botMessage = { text: data.message, from: 'bot', imageUrl: data.imageData?.imageUrl };
+            const botMessage = {
+                text: data.message,
+                from: 'bot',
+                imageUrl: data.imageData?.imageUrl
+            };
             setMessages(prevMessages => [...prevMessages, botMessage]);
 
             if (data.imageGenerated && data.imageData) {
@@ -49,11 +54,14 @@ const Chatbot = () => {
 
         } catch (error) {
             console.error('Error al comunicarse con la API:', error);
-            const errorMessage = { text: '¡Ups! Algo salió mal. Intenta de nuevo más tarde.', from: 'bot' };
+            const errorMessage = {
+                text: '¡Ups! Algo salió mal al conectar con el servidor. Por favor, verifica que el backend esté funcionando e intenta de nuevo.',
+                from: 'bot'
+            };
             setMessages(prevMessages => [...prevMessages, errorMessage]);
         }
 
-        setInput(''); 
+        setInput('');
     };
 
     const toggleChat = () => {
@@ -62,7 +70,6 @@ const Chatbot = () => {
 
     return (
         <div>
-            {/* Contenedor del ícono y el texto */}
             <div 
                 onClick={toggleChat}
                 className="fixed bottom-6 right-6 z-50 cursor-pointer flex flex-col items-center transform transition-transform hover:scale-105"
@@ -70,7 +77,7 @@ const Chatbot = () => {
     
                 <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-lg border border-gray-300">
                     <img 
-                        src="/images/avatar.jpeg" //icono de michi
+                        src="/images/avatar.jpeg"
                         alt="Chatbot de Michis" 
                         className="w-12 h-12"
                     />

@@ -33,13 +33,12 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Configuración de multer
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB máximo por archivo
+        fileSize: 5 * 1024 * 1024 
     }
 });
 
-module.exports = upload; // Exportamos la instancia configurada
+module.exports = upload; 

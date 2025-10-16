@@ -4,7 +4,6 @@ import { Container, Typography, Button, Box } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const OrderConfirmationPage = () => {
-  // Usamos useLocation para obtener los datos pasados por 'navigate'
   const location = useLocation();
   const pedidoId = location.state?.pedidoId;
   const total = location.state?.total;

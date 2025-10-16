@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importamos los íconos de ojo
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ const AdminLoginPage = () => {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false); // Nuevo estado para la visibilidad
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,10 +56,10 @@ const AdminLoginPage = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="relative"> {/* Contenedor para el input y el botón */}
+          <div className="relative"> 
             <label className="sr-only" htmlFor="password">Contraseña</label>
             <input
-              type={showPassword ? 'text' : 'password'} // Cambia el tipo según el estado
+              type={showPassword ? 'text' : 'password'} 
               id="password"
               name="password"
               placeholder="Contraseña"

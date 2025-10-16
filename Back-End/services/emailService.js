@@ -19,8 +19,6 @@ const sendNewOrderEmail = async ({ to, subject, data }) => {
         return; 
     }
     
-    // 1. Generar el listado de ítems para el HTML
-    // 🚨 CAMBIO CLAVE: Usar item.nombre y añadir una comprobación 🚨
     const itemsHtml = data.items.map(item => `
         <li>
             ${item.cantidad} x 

@@ -1,11 +1,10 @@
-// src/components/NosotrosPage.jsx (Versión Final con Imagen de Perfil)
+// src/components/NosotrosPage.jsx 
 import React from 'react';
 import { Box, Typography, Container, Grid, Avatar } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-// === Estilos Personalizados (Mismos colores pasteles) ===
 const RootContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: '#fdf3f8', // Rosa muy claro, casi blanco
+  backgroundColor: '#fdf3f8', 
   padding: theme.spacing(6, 0),
   minHeight: '80vh',
 }));
@@ -17,7 +16,7 @@ const StyledSection = styled(Box)(({ theme }) => ({
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
-  color: '#8b4513', // Un marrón cálido para el texto principal
+  color: '#8b4513', 
   marginBottom: theme.spacing(4),
   fontWeight: 700,
   fontSize: '2.5rem',
@@ -27,7 +26,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const PastelText = styled(Typography)(({ theme }) => ({
-  color: '#a59e9c', // Gris topo suave
+  color: '#a59e9c', 
   lineHeight: 1.8,
   maxWidth: 800,
   margin: '0 auto',
@@ -45,7 +44,7 @@ const AvatarContainer = styled(Box)(({ theme }) => ({
     right: -10,
     bottom: -10,
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 192, 203, 0.3)', // Rosa pastel con transparencia
+    backgroundColor: 'rgba(255, 192, 203, 0.3)', 
     zIndex: -1,
   },
 }));
@@ -53,15 +52,15 @@ const AvatarContainer = styled(Box)(({ theme }) => ({
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: 150,
   height: 150,
-  border: `4px solid ${'#ffb6c1'}`, // Rosa claro
-  boxShadow: `0px 8px 25px rgba(255, 192, 203, 0.5)`, // Sombra suave rosa
+  border: `4px solid ${'#ffb6c1'}`,
+  boxShadow: `0px 8px 25px rgba(255, 192, 203, 0.5)`,
 }));
 
 const HighlightBox = styled(Box)(({ theme }) => ({
-  backgroundColor: '#e0f2f7', // Azul cielo pastel
+  backgroundColor: '#e0f2f7', 
   padding: theme.spacing(4),
   borderRadius: theme.shape.borderRadius * 2,
-  boxShadow: `0px 5px 15px rgba(173, 216, 230, 0.4)`, // Sombra suave azul
+  boxShadow: `0px 5px 15px rgba(173, 216, 230, 0.4)`, 
   textAlign: 'left',
   transition: 'transform 0.3s ease-in-out',
   '&:hover': {
@@ -73,18 +72,17 @@ const CatIcon = styled('span')(({ theme }) => ({
   fontSize: '2rem',
   marginRight: theme.spacing(1),
   verticalAlign: 'middle',
-  color: '#dda0dd', // Orquídea claro
+  color: '#dda0dd',
 }));
 
-// === Componente NosotrosPage ===
+
 const NosotrosPage = () => {
   return (
     <RootContainer>
       <Container maxWidth="md">
-        {/* Sección Hero / Banner */}
+    
         <StyledSection sx={{ mt: 4, mb: 8 }}>
           <img 
-            // RUTA DE LA IMAGEN GRANDE (Nosotros.jpg)
             src="/images/Nosotros.jpg" 
             alt="MichiMood Hero" 
             style={{ 
@@ -103,7 +101,6 @@ const NosotrosPage = () => {
           </PastelText>
         </StyledSection>
 
-        {/* Sección: Origen del Proyecto */}
         <StyledSection>
           <AvatarContainer>
             <StyledAvatar 
@@ -122,7 +119,6 @@ const NosotrosPage = () => {
           </PastelText>
         </StyledSection>
 
-        {/* Sección: La Filosofía de MichiMood */}
         <StyledSection>
           <SectionTitle variant="h4">
             Nuestra Filosofía: Amor, Calidad y Diseño <CatIcon>❤️</CatIcon>

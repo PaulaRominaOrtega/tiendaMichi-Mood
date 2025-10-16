@@ -1,15 +1,13 @@
 const express = require("express");
 const http = require("http");
-const passport = require('passport'); // 🚨 IMPORTACIÓN NECESARIA
-const session = require('express-session'); // 🚨 IMPORTACIÓN NECESARIA
+const passport = require('passport');
+const session = require('express-session');
 const { initializeSocket } = require("./server-config/socket"); 
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const path = require("path");
 require("dotenv").config();
-
-// 🚨 Asegúrate de que este archivo exista y configure tu estrategia de Google
 require('./config/passport-setup'); 
 
 const { errorHandler, notFound } = require("./middleware/errorHandler");
@@ -24,21 +22,24 @@ const authRoutes = require("./routes/auth.routes");
 
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-const SESSION_SECRET = process.env.SESSION_SECRET || 'clave-secreta-por-defecto-si-no-hay-env'; // Usar variable de entorno
+const SESSION_SECRET = process.env.SESSION_SECRET || 'clave-secreta-por-defecto-si-no-hay-env';
 
 const app = express();
 const server = http.createServer(app); 
 
 app.use(helmet());
-
-// -------------------------------------------------------------------
-// 🚨 MODIFICACIÓN CLAVE: Configuración de CORS con Credenciales 🚨
-// -------------------------------------------------------------------
 app.use(
   cors({
-    origin: FRONTEND_URL, 
+    origin: (origin, callback) => {
+        const allowedOrigins = [FRONTEND_URL, 'http://localhost:5174']; 
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true // Necesario para que Passport use cookies/sessions
+    credentials: true
   })
 );
 
@@ -46,26 +47,19 @@ app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// -------------------------------------------------------------------
-// 🚨 CONFIGURACIÓN DE AUTENTICACIÓN: EXPRESS SESSION Y PASSPORT 🚨
-// -------------------------------------------------------------------
-
-// 1. Express Session (DEBE ir ANTES de Passport.initialize)
 app.use(session({
-    secret: SESSION_SECRET, // Usa la clave secreta de tu .env
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false, 
     cookie: { 
         secure: process.env.NODE_ENV === 'production', 
-        maxAge: 24 * 60 * 60 * 1000 // 1 día
+        maxAge: 24 * 60 * 60 * 1000
     } 
 }));
 
-// 2. Inicializar Passport
 app.use(passport.initialize());
-app.use(passport.session()); // Necesario si usas serialización/deserialización (Passport Sessions)
+app.use(passport.session());
 
-// Middleware para Content-Security-Policy (para archivos estáticos)
 app.use((req, res, next) => {
     if (req.path.startsWith('/uploads/')) {
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); 
@@ -73,10 +67,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Servir archivos estáticos desde la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ruta de salud
 app.get("/health", (req, res) => {
   res.json({
     success: true,
@@ -85,15 +77,20 @@ app.get("/health", (req, res) => {
     version: "1.0.0",
   });
 });
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); 
+
+app.use("/auth", authRoutes); 
 
 app.use("/api/productos", productoRoutes);
 app.use("/api/categorias", categoriasRoutes);
 app.use("/api/clientes", clienteRoutes);
 app.use("/api/pedidos", pedidoRoutes); 
 app.use('/api', chatRoutes);
+
 app.use(notFound);
 app.use(errorHandler);
+
+// arranque del servidor
 
 const initializeDatabase = async () => {
   try {

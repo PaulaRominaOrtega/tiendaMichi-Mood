@@ -21,10 +21,15 @@ const Pedido = sequelize.define(
       allowNull: true,
     },
     estado: {
-      type: DataTypes.ENUM('Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado'),
-      defaultValue: 'Pendiente',
-      allowNull: false,
-    },
+    type: DataTypes.ENUM(
+        'Pendiente', 
+        'En Proceso de Envío',
+        'Entregado'
+       
+    ),
+    defaultValue: 'Pendiente',
+    allowNull: false
+},
 
     idCliente: {
       type: DataTypes.INTEGER,

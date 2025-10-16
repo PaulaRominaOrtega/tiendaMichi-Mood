@@ -1,39 +1,45 @@
+// src/components/FilterBar.jsx
 import React from 'react';
-import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import products from '../data/products';
-
-const categories = ['Nuevos ingresos', 'Más vendidos', '30%OFF'];
+import SearchIcon from '@mui/icons-material/Search'; 
+import InputAdornment from '@mui/material/InputAdornment'; 
 
 const FilterBar = () => {
   return (
-    <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 pt-6 bg-gray-100 px-4">
-      
-      
-      <div className="flex flex-wrap gap-4 justify-center md:justify-start w-full md:w-auto">
-        {categories.map((categoria, index) => (
-          <Button
-            key={index}
-            variant="outlined"
-            color="primary"
-            sx={{ minWidth: 120 }}
-          >
-            {categoria}
-          </Button>
-        ))}
-      </div>
-
-      <div className="w-full md:w-auto">
+    <div className="w-full flex justify-center items-center py-6 px-4">
+      <div className="w-full max-w-md"> 
         <Autocomplete
           disablePortal
-          options={products}
+          options={products} 
+          noOptionsText="No se encontraron productos"
+          
+          getOptionLabel={(option) => {
+        
+            if (typeof option === 'string') {
+              return option;
+            }
+            return option.nombre;
+          }}
+          
           renderInput={(params) => (
-            <TextField {...params} label="Buscar producto" />
+            <TextField 
+              {...params} 
+              label="Buscar productos..."
+              fullWidth
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
           )}
         />
       </div>
-      
     </div>
   );
 };

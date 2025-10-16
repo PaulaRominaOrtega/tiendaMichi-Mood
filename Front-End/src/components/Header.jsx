@@ -11,234 +11,226 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import Badge from '@mui/material/Badge'; 
-import Divider from '@mui/material/Divider';
-import LoginIcon from '@mui/icons-material/Login'; 
-import LogoutIcon from '@mui/icons-material/Logout'; 
-import AccountCircleIcon from '@mui/icons-material/AccountCircle'; 
+import Badge from '@mui/material/Badge';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
-// --- Importar Hooks y Contextos ---
-import useCategories from '../hooks/useCategories'; 
-import { useCart } from '../context/CartContext'; // 🚨 Necesario para obtener clearCart
-import { useAuth } from '../context/AuthContext'; 
-// ------------------------------
+import useCategories from '../hooks/useCategories';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
-// Rutas de navegación estáticas
+const CUSTOM_LILA = '#C8A2C8';
+const NEUTRAL_GRAY_BG = '#9e9e9e';
+const AVATAR_PURPLE = '#9370DB';
+
 const pagesWithRoutes = [
   { name: 'Inicio', path: '/' },
   { name: 'Nosotros', path: '/nosotros' },
-  { name: 'Contacto', path: '/contacto' }, 
+  { name: 'Contacto', path: '/contacto' },
 ];
 
-// Configuraciones del menú de usuario
-const settings = ['Perfil', 'Cuenta', 'Panel'];
-
+const settings = [];
 
 function Header() {
   const navigate = useNavigate();
-  const { categories: fetchedCategories, loading, error } = useCategories(); 
-  
-  // 🚨 OBTENEMOS EL ESTADO DE AUTENTICACIÓN Y LA FUNCIÓN LOGOUT 🚨
-  const { isAuthenticated, logout, email } = useAuth(); 
-  
-  // 🚨 OBTENEMOS EL CARRO Y LA FUNCIÓN DE LIMPIEZA 🚨
-  const { totalItems, clearCart } = useCart(); 
-  
-  const categoriesToShow = fetchedCategories.filter(cat => 
-      ['Deco Hogar', 'Cocina', 'Librería', 'Accesorios'].includes(cat.nombre)
+  const { categories: fetchedCategories, loading, error } = useCategories();
+  const { isAuthenticated, logout, email } = useAuth();
+  const { totalItems, clearCart } = useCart();
+
+  const categoriesToShow = fetchedCategories.filter(cat =>
+    ['Deco Hogar', 'Cocina', 'Librería', 'Accesorios'].includes(cat.nombre)
   );
 
   const [anchorElProducts, setAnchorElProducts] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  
-  // --- Manejo de Menús ---
-  const handleOpenProductsMenu = (event) => {
-    setAnchorElProducts(event.currentTarget);
-  };
 
-  const handleCloseProductsMenu = () => {
-    setAnchorElProducts(null);
-  };
-  
+  const handleOpenProductsMenu = (event) => setAnchorElProducts(event.currentTarget);
+  const handleCloseProductsMenu = () => setAnchorElProducts(null);
+
   const handleCategoryClick = (categoryName) => {
-      handleCloseProductsMenu();
-      const regex = new RegExp("\\s", "g"); 
-      const slug = categoryName.toLowerCase().replace(regex, '-'); 
-      navigate(`/productos?categoria=${slug}`); 
+    handleCloseProductsMenu();
+    const slug = categoryName.toLowerCase().replace(/\s/g, '-');
+    navigate(`/productos?categoria=${slug}`);
   };
 
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
+  const handleAuthAction = (path, action) => {
+    if (action === 'logout') logout(clearCart);
+    navigate(path);
   };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
-  // --- LÓGICA DE LOGIN / LOGOUT (Modificado para pasar clearCart) ---
-  const handleAuthAction = (action) => {
-    handleCloseUserMenu();
-    if (action === 'login') {
-        navigate('/login');
-    } else if (action === 'logout') {
-        // 🚨 CAMBIO CLAVE: Pasamos clearCart a la función logout 🚨
-        logout(clearCart); 
-    }
-  };
-
 
   return (
-    <AppBar position="static" sx={{ mt:2, backgroundColor: '#9e9e9e' }}> 
+    <AppBar position="static" sx={{ mt: 2, backgroundColor: NEUTRAL_GRAY_BG, boxShadow: 'none' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          
-          {/* Logo y Nombre de la Tienda (Desktop) */}
-          <GitHubIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
-          <Typography
-            variant="h6"
-            noWrap
-            component={Link} 
-            to="/" 
+          <Box
+            component={Link}
+            to="/"
             sx={{
-              mr: 2,
+              mr: 4,
               display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
+              alignItems: 'center',
               textDecoration: 'none',
             }}
           >
-            MichiMood
-          </Typography>
+            <img
+              src="/images/michi.png"
+              alt="Logo MichiMood"
+              style={{ height: 62, width: 'auto', borderRadius: '12px' }} 
+              
+            />
+          </Box>
 
-          {/* Enlaces de navegación Desktop */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-            
-            {/* Páginas estáticas y Categorías */}
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-start' }}>
             {pagesWithRoutes.map((page) => (
               <Button
                 key={page.name}
-                component={Link} 
-                to={page.path} 
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                component={Link}
+                to={page.path}
+                sx={{
+                  my: 2,
+                  color: 'white',
+                  display: 'block',
+                  fontWeight: 600,
+                  '&:hover': { color: CUSTOM_LILA, backgroundColor: 'transparent' }
+                }}
               >
-                {page.name}
+                {page.name.toUpperCase()}
               </Button>
             ))}
 
-            {/* --- Botón de CATEGORÍAS con Menú Simple --- */}
             <Button
-                key="Categorias"
-                aria-controls={anchorElProducts ? 'simple-menu' : undefined}
-                aria-haspopup="true"
-                onClick={handleOpenProductsMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+              key="Categorias"
+              aria-controls={anchorElProducts ? 'simple-menu' : undefined}
+              aria-haspopup="true"
+              onClick={handleOpenProductsMenu}
+              sx={{
+                my: 2,
+                color: 'white',
+                display: 'block',
+                fontWeight: 600,
+                '&:hover': { color: CUSTOM_LILA, backgroundColor: 'transparent' }
+              }}
             >
-                Categorías
+              CATEGORÍAS
             </Button>
-            
-            {/* --- MENÚ SIMPLE DINÁMICO (Categorías) --- */}
+
             <Menu
               id="simple-menu"
               anchorEl={anchorElProducts}
               open={Boolean(anchorElProducts)}
               onClose={handleCloseProductsMenu}
-              MenuListProps={{
-                'aria-labelledby': 'basic-button',
-              }}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
               transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             >
               {loading && <MenuItem disabled><CircularProgress size={20} /></MenuItem>}
               {error && <MenuItem disabled><Alert severity="error">Error al cargar categorías</Alert></MenuItem>}
-                
               {!loading && categoriesToShow.length > 0 && categoriesToShow.map((category) => (
-                <MenuItem 
-                    key={category.id} 
-                    onClick={() => handleCategoryClick(category.nombre)}
-                >
-                    {category.nombre}
+                <MenuItem key={category.id} onClick={() => handleCategoryClick(category.nombre)}>
+                  {category.nombre}
                 </MenuItem>
               ))}
             </Menu>
-            {/* ------------------------------------------- */}
-
           </Box>
 
-          {/* Íconos de Carrito, Autenticación y Configuración */}
-          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
-            
-            {/* 🚨 BOTÓN DE LOGIN / LOGOUT DINÁMICO (Desktop) 🚨 */}
-            <Button
+          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1 }}>
+
+            {isAuthenticated ? (
+              <Button
                 color="inherit"
                 variant="outlined"
-                size="small"
-                onClick={() => handleAuthAction(isAuthenticated ? 'logout' : 'login')}
-                startIcon={isAuthenticated ? <LogoutIcon /> : <LoginIcon />}
-                sx={{ 
-                    display: { xs: 'none', md: 'flex' }, 
-                    textTransform: 'none', 
-                    borderColor: 'white',
-                    color: 'white'
+                size="medium"
+                onClick={() => handleAuthAction('/', 'logout')}
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  textTransform: 'uppercase',
+                  borderColor: 'white',
+                  color: 'white',
+                  fontWeight: 600,
+                  '&:hover': { borderColor: CUSTOM_LILA, color: CUSTOM_LILA }
                 }}
-            >
-                {isAuthenticated ? 'Cerrar Sesión' : 'Iniciar Sesión'}
-            </Button>
-
+              >
+                Cerrar Sesión
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  onClick={() => handleAuthAction('/register')}
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    backgroundColor: CUSTOM_LILA,
+                    color: 'white',
+                    '&:hover': { backgroundColor: `${CUSTOM_LILA}E0` }
+                  }}
+                >
+                  CREAR CUENTA
+                </Button>
+                <Button
+                  color="inherit"
+                  variant="outlined"
+                  size="medium"
+                  onClick={() => handleAuthAction('/login')}
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    textTransform: 'uppercase',
+                    borderColor: 'white',
+                    color: 'white',
+                    fontWeight: 600,
+                    '&:hover': { borderColor: CUSTOM_LILA, color: CUSTOM_LILA }
+                  }}
+                >
+                  Iniciar Sesión
+                </Button>
+              </>
+            )}
 
             <Tooltip title="Ver carrito">
-              <IconButton 
-                color="inherit" 
+              <IconButton
+                color="inherit"
                 onClick={() => navigate('/carrito')}
+                sx={{ color: 'white', '&:hover': { color: CUSTOM_LILA } }}
               >
-                <Badge badgeContent={totalItems} color="error" max={99}> 
+                <Badge badgeContent={totalItems} color="error" max={99}>
                   <ShoppingCartIcon />
                 </Badge>
               </IconButton>
             </Tooltip>
-            
-            {/* Menú de Usuario (Configuración) */}
-            <Tooltip title={isAuthenticated && email ? email : "Abrir Configuración"}>
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                {/* Muestra la inicial del email si existe, o el icono de usuario */}
-                <Avatar alt="Usuario" sx={{ bgcolor: 'secondary.main' }}> 
-                    {isAuthenticated && email ? email[0].toUpperCase() : <AccountCircleIcon />}
+
+            <Tooltip title={isAuthenticated && email ? email : "Abrir Menú"}>
+              <IconButton
+                onClick={!isAuthenticated ? (e) => setAnchorElUser(e.currentTarget) : undefined}
+                sx={{ p: 0 }}
+              >
+                <Avatar alt="Usuario" sx={{ bgcolor: AVATAR_PURPLE, width: 32, height: 32 }}>
+                  {isAuthenticated && email ? email[0].toUpperCase() : <AccountCircleIcon />}
                 </Avatar>
               </IconButton>
             </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-              keepMounted
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-              
-              {/* 🚨 Opción de Logout en el menú desplegable también 🚨 */}
-              <Divider />
-              <MenuItem onClick={() => handleAuthAction(isAuthenticated ? 'logout' : 'login')}>
-                <Typography 
-                    textAlign="center" 
-                    color={isAuthenticated ? 'error' : 'primary'}
-                >
-                    {isAuthenticated ? 'Cerrar Sesión' : 'Iniciar Sesión'}
-                </Typography>
-              </MenuItem>
 
-            </Menu>
+            {!isAuthenticated && (
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                keepMounted
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                open={Boolean(anchorElUser)}
+                onClose={() => setAnchorElUser(null)}
+              >
+                <MenuItem onClick={() => handleAuthAction('/login')}>
+                  <Typography textAlign="center">Iniciar Sesión</Typography>
+                </MenuItem>
+                <MenuItem onClick={() => handleAuthAction('/register')}>
+                  <Typography textAlign="center">Crear Cuenta</Typography>
+                </MenuItem>
+              </Menu>
+            )}
           </Box>
         </Toolbar>
       </Container>

@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline, Box, Alert, Typography } from '@mui/material';
 
-// === Importaciones de Componentes Públicos (Front-End/src/components) ===
+//Importacion Componentes Públicos 
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Chatbot from './components/ChatBot'; 
@@ -15,10 +15,11 @@ import ContactoPage from './components/ContactoPage';
 import OrderConfirmationPage from './components/OrderConfirmationPage'; 
 import LoginPage from './components/LoginPage'; 
 import LoginSuccessHandler from './components/LoginSuccessHandler'; 
-import RegisterPage from './components/RegisterPage'; // 👈 ¡NUEVA IMPORTACIÓN!
+import RegisterPage from './components/RegisterPage'; 
+import FilterBar from './components/FilterBar'; 
 
 
-// === Importaciones de Componentes de Administración (Front-End/src/Admin/...) ===
+//Importaciones Administración
 import AdminLoginPage from './Admin/pages/AdminLoginPage';
 import AdminLayout from './Admin/components/AdminLayout'; 
 import Dashboard from './Admin/pages/Dashboard'; 
@@ -28,25 +29,32 @@ import ClienteCrud from './Admin/components/ClienteCrud';
 import PedidoCrud from './Admin/components/PedidoCrud'; 
 import PedidoForm from './Admin/components/PedidoForm'; 
 
-// === Importaciones CLAVE de Contextos ===
+//iimportacion contexto
 import { CartProvider, useCart } from './context/CartContext'; 
-import { AuthProvider } from './context/AuthContext'; 
-// ------------------------------------------
+import { AuthProvider, useAuth } from './context/AuthContext'; 
 
-// Componente "guardián" para proteger las rutas de administración
+// Componente "guardián" para proteger las rutas de Usuario
+const PrivateUserRoute = ({ children }) => {
+
+    const { isAuthenticated, loading } = useAuth(); 
+
+    if (loading) {
+        return <Box sx={{ textAlign: 'center', py: 10 }}>Cargando sesión...</Box>; 
+    }
+
+    return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
 const PrivateAdminRoute = ({ children }) => {
   const token = localStorage.getItem('adminToken'); 
   return token ? children : <Navigate to="/admin/login" />;
 };
 
-// Componente para mostrar las notificaciones del carrito
+// mostrar las notificaciones del carrito
 const NotificationBar = () => {
-    // 1. Los Hooks se llaman SIEMPRE al inicio y sin condiciones
     const { notification, hideNotification } = useCart(); 
 
-    // 2. El useEffect también se llama SIEMPRE
     React.useEffect(() => {
-        // La condición para el temporizador va DENTRO del hook
         if (notification) { 
             const timer = setTimeout(() => {
                 hideNotification();
@@ -55,7 +63,6 @@ const NotificationBar = () => {
         }
     }, [notification, hideNotification]);
     
-    // 3. El renderizado condicional ocurre AL FINAL del componente
     if (!notification) {
         return null;
     }
@@ -81,7 +88,7 @@ const NotificationBar = () => {
 };
 
 
-// Componente de Layout para la zona pública 
+// Componente para la zona publica 
 const MainLayout = ({ children }) => (
   <>
     <Header />
@@ -100,7 +107,7 @@ function App() {
                 <CssBaseline />
                 <Routes>
                     
-                    {/* === Rutas de Administración === */}
+                    {/*  rutas de Administracion */}
                     <Route path="/admin/login" element={<AdminLoginPage />} />
 
                     <Route
@@ -119,23 +126,32 @@ function App() {
                         <Route path="pedidos/editar/:id" element={<PedidoForm />} />
                     </Route>
 
-                    {/* === Rutas Públicas de Autenticación === */}
+                    {/* rutas publicas de Autenticacion*/}
                     <Route path="/login" element={
                         <MainLayout>
                             <LoginPage /> 
                         </MainLayout>
                     } />
                     
-                    <Route path="/register" element={ // 👈 ¡NUEVA RUTA DE REGISTRO!
+                    <Route path="/register" element={
                         <MainLayout>
                             <RegisterPage /> 
                         </MainLayout>
                     } />
 
-                    {/* Ruta de manejo de redirección exitosa de Google/OAuth */}
+                    {/* ruta protegida perfil*/}
+                    <Route path="/profile" element={
+                        <PrivateUserRoute> 
+                            <MainLayout>
+                                <FilterBar />
+                            </MainLayout>
+                        </PrivateUserRoute>
+                    } />
+
+                    {/* Ruta de manejo google */}
                     <Route path="/login-success" element={<LoginSuccessHandler />} /> 
                     
-                    {/* === Rutas Públicas de Navegación === */}
+                    {/* ruta pblicas de Navegacion*/}
                     <Route path="/" element={
                         <MainLayout>
                             <Banner />
@@ -149,7 +165,6 @@ function App() {
                         </MainLayout>
                     } />
 
-                    {/* Ruta de Detalle de Producto */}
                     <Route 
                         path="/producto/:id" 
                         element={
@@ -159,21 +174,18 @@ function App() {
                         } 
                     />
 
-                    {/* Ruta del Carrito */}
                     <Route path="/carrito" element={
                         <MainLayout>
                             <CartPage /> 
                         </MainLayout>
                     } />
-                    
-                    {/* Ruta de Confirmación de Pedido */}
+
                     <Route path="/confirmacion-pedido" element={
                         <MainLayout>
                             <OrderConfirmationPage /> 
                         </MainLayout>
                     } />
-                    
-                    {/* Otras Rutas Públicas */}
+                   
                     <Route path="/nosotros" element={
                         <MainLayout>
                             <NosotrosPage /> 
@@ -186,7 +198,6 @@ function App() {
                         </MainLayout>
                     } />
                     
-                    {/* Ruta 404: Captura cualquier otra URL no definida */}
                     <Route path="*" element={
                         <MainLayout>
                             <Box sx={{ textAlign: 'center', py: 10 }}>

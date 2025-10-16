@@ -4,12 +4,8 @@ const dalleService = require('../services/dalleService');
 const productService = require('../services/productService'); 
 
 const handleProductsQuery = async (message) => {
-    //Llama al nuevo servicio para buscar productos en la base de datos
     const productData = await productService.getProductDetails(message);
-
-    //Llama a Gemini, pasándole los datos de los productos
     const botResponse = await geminiService.generateResponse(message, 'productos', productData);
-    
     return { message: botResponse };
 };
 
@@ -29,8 +25,9 @@ const handleCustomizationQuery = async (message) => {
     return { message: botResponse, imageUrl };
 };
 
-const handleGreeting = async () => {
-    return { message: '¡Hola! Soy un asistente virtual para amantes de los michis. ¿En qué puedo ayudarte hoy? Puedes preguntar sobre nuestros productos, envíos o medios de pago.' };
+const handleGreeting = async (message) => {
+    const botResponse = await geminiService.generateResponse(message, 'saludo');
+    return { message: botResponse };
 };
 
 const handleOtherQuery = async (message) => {

@@ -10,43 +10,40 @@ const RegisterPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     
-    // Estados para el formulario de registro
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState(''); // Campo adicional de nombre
+    const [name, setName] = useState(''); 
+    const [telefono, setTelefono] = useState(''); 
     const [confirmPassword, setConfirmPassword] = useState('');
     
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Manejador del Formulario de Registro
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
         
-        // Validación básica
         if (password !== confirmPassword) {
             setError('Las contraseñas no coinciden.');
             return;
         }
-        if (!email || !password || !name) {
-            setError('Por favor, completa todos los campos.');
+        if (!email || !password || !name || !telefono) {
+            setError('Por favor, completa todos los campos, incluyendo el teléfono.');
             return;
         }
 
         setLoading(true);
 
         try {
-            // 1. Llamada al Backend para crear el nuevo usuario
             const response = await fetch(REGISTER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // 🚨 CORRECCIÓN CLAVE: Mapeamos la variable 'name' del frontend a la clave 'nombre' que espera el backend.
                 body: JSON.stringify({ 
-                    nombre: name, // El backend espera 'nombre'
+                    nombre: name, 
                     email: email, 
+                    telefono: telefono, 
                     password: password 
                 }),
             });
@@ -54,14 +51,10 @@ const RegisterPage = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                // Si el backend devuelve un 400 (ej: email ya existe), mostramos el mensaje de error.
-                throw new Error(data.message || 'Error al registrar la cuenta. Verifica que el correo no esté ya registrado.');
+                const errorMessage = data.message || `Error ${response.status}: Error al registrar la cuenta.`;
+                throw new Error(errorMessage);
             }
-            
-            // 2. Si es exitoso, usamos la función login (asume que el backend devuelve los tokens)
             login(data); 
-
-            // 3. Redirigir al usuario
             navigate('/', { replace: true });
 
         } catch (err) {
@@ -78,11 +71,10 @@ const RegisterPage = () => {
                     <span style={{ color: '#ffb6c1' }}>Únete</span> a la Comunidad MichiMood
                 </Typography>
                 
-                {/* Mostrar Error */}
                 {error && <Box sx={{ mb: 2 }}><Alert severity="error">{error}</Alert></Box>}
 
-                {/* === Formulario de Registro === */}
                 <Box component="form" onSubmit={handleRegister} noValidate sx={{ mt: 1 }}>
+                    
                     <TextField
                         margin="normal"
                         required
@@ -94,6 +86,7 @@ const RegisterPage = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
+
                     <TextField
                         margin="normal"
                         required
@@ -105,6 +98,20 @@ const RegisterPage = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
+                    
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        name="telefono"
+                        label="Teléfono"
+                        type="tel" 
+                        id="telefono"
+                        autoComplete="tel"
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)} 
+                    />
+                    
                     <TextField
                         margin="normal"
                         required
@@ -141,7 +148,6 @@ const RegisterPage = () => {
                     </Button>
                 </Box>
                 
-                {/* Enlace para ir al Login */}
                 <Box textAlign="center" sx={{ mt: 2 }}>
                     <Typography variant="body2">
                         ¿Ya tienes cuenta?{' '}

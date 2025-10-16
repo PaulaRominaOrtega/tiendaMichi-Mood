@@ -5,11 +5,9 @@ const BACKEND_BASE_URL = 'http://localhost:3000';
 
 
 const ProductForm = ({ onSave, editingProduct, onCancel }) => {
-  // 🆕 ESTADOS PARA CATEGORÍAS
+  
   const [categorias, setCategorias] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  
-  // Estado inicial del formulario con todos los campos necesarios
   const [formData, setFormData] = useState(
     editingProduct
       ? {
@@ -22,8 +20,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
           stock: editingProduct.stock || 0,
           oferta: editingProduct.oferta || false,
           descuento: editingProduct.descuento || 0,
-          idAdministrador: editingProduct.idAdministrador || 1, // Asume un ID por defecto
-          // 🔑 Inicializa idCategoria con el valor del producto si existe, si no, vacío
+          idAdministrador: editingProduct.idAdministrador || 1, 
           idCategoria: editingProduct.idCategoria || '', 
         }
       : {
@@ -37,7 +34,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
           oferta: false,
           descuento: 0,
           idAdministrador: 1,
-          idCategoria: '', // 🔑 Inicializa vacío
+          idCategoria: '',
         }
   );
 
@@ -52,23 +49,19 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
   const initialImageUrls = getInitialImageUrls(editingProduct);
   const [previewUrls, setPreviewUrls] = useState(initialImageUrls);
 
-  // 🔑 1. HOOK PARA CARGAR LAS CATEGORÍAS
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // 🎯 Asegúrate de que esta ruta '/categorias' sea la correcta en tu API
         const response = await api.get('/categorias'); 
         if (response.data.success && response.data.data) {
           const fetchedCategories = response.data.data;
           setCategorias(fetchedCategories);
-
-          // Si es un producto nuevo y tenemos categorías, selecciona la primera por defecto
           if (!editingProduct && fetchedCategories.length > 0) {
             setFormData(prev => ({
               ...prev,
               idCategoria: fetchedCategories[0].id,
             }));
-          // Si es edición y no tiene categoría asignada (o la que se cargó no existe)
+          
           } else if (editingProduct && !formData.idCategoria && fetchedCategories.length > 0) {
               setFormData(prev => ({
                   ...prev,
@@ -78,7 +71,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
         }
       } catch (error) {
         console.error('Error al obtener categorías:', error);
-        // Podrías manejar un estado de error para mostrar un mensaje al usuario
+       
       } finally {
         setLoadingCategories(false);
       }
@@ -86,7 +79,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
 
     fetchCategories();
     
-    // Hook para limpiar la memoria de las URLs temporales
     return () => {
       if (selectedFiles.length > 0) {
         selectedFiles.forEach(file => {
@@ -98,7 +90,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
     };
   }, [editingProduct, selectedFiles.length]); 
 
-  // Manejo de cambios en campos de texto/número/checkbox
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -107,11 +98,9 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
     });
   };
 
-  // Manejo de la selección de archivos
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Revocar URLs antiguas antes de crear nuevas, si las hay
     selectedFiles.forEach(file => {
       if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
     });
@@ -133,7 +122,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
     }
   };
   
-  // Manejo del envío del formulario
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     let currentSelectedFiles = selectedFiles;
@@ -141,14 +130,12 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
     try {
       const formDataToSend = new FormData();
       
-      // Agregar campos de texto y valores
+    
       Object.keys(formData).forEach(key => {
-        // El backend debe recibir idCategoria como texto o número, no hay problema
         const value = typeof formData[key] === 'boolean' ? (formData[key] ? 'true' : 'false') : formData[key];
         formDataToSend.append(key, value);
       });
       
-      // Envía CADA archivo con la clave 'imagenes' (plural)
       if (currentSelectedFiles.length > 0) {
         currentSelectedFiles.forEach(file => {
           formDataToSend.append('imagenes', file); 
@@ -169,7 +156,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
         });
       }
       
-      // Limpiar URLs después del éxito
       currentSelectedFiles.forEach(file => {
         if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
       }); 
@@ -182,7 +168,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
         console.error("Respuesta del servidor:", error.response.data);
       }
       
-      // Limpiar URLs en caso de fallo
       currentSelectedFiles.forEach(file => {
         if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
       }); 
@@ -209,8 +194,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
           <div className="flex-grow overflow-y-auto pr-2">
-            
-            {/* Campo: Nombre */}
+           
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Nombre</label>
               <input
@@ -224,14 +208,13 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
               />
             </div>
 
-            {/* 🔑 2. CAMPO: SELECTOR DE CATEGORÍA */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Categoría</label>
               {loadingCategories ? (
                   <p className="mt-1 text-gray-500">Cargando categorías...</p>
               ) : categorias.length > 0 ? (
                   <select
-                      name="idCategoria" // 🎯 ¡CLAVE! El nombre debe coincidir con el campo de la BD
+                      name="idCategoria" 
                       value={formData.idCategoria}
                       onChange={handleChange}
                       required
@@ -252,7 +235,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
               )}
             </div>
 
-            {/* Campo: Descripción */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Descripción</label>
               <textarea
@@ -265,10 +247,9 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
-            {/* Campos Opcionales (Material, Capacidad, Características) */}
+    
             <div className="grid grid-cols-3 gap-4 mb-4">
-                {/* ... (Tus inputs de Material, Capacidad, Características) ... */}
+               
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Material</label>
                     <input
@@ -304,9 +285,7 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
                 </div>
             </div>
 
-            {/* Campos: Precio y Stock */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-                {/* ... (Tus inputs de Precio y Stock) ... */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Precio</label>
                     <input
@@ -336,7 +315,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
                 </div>
             </div>
 
-            {/* Campo: Múltiples Imágenes (Máx 3) */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Imágenes del Producto (Máx 3)</label>
               <input
@@ -366,7 +344,6 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
               )}
             </div>
 
-            {/* Campo: Oferta y Descuento */}
             <div className="flex items-center mb-4 space-x-4">
                 <div className="flex items-center">
                     <input
@@ -400,12 +377,9 @@ const ProductForm = ({ onSave, editingProduct, onCancel }) => {
                 )}
             </div>
             
-            {/* Campo oculto de Administrador (se mantiene) */}
             <input type="hidden" name="idAdministrador" value={formData.idAdministrador} />
-            {/* ❌ ELIMINAMOS EL CAMPO OCULTO DE idCategoria, ya que usamos el <select> */}
-
+            
           </div>
-          {/* Botones de acción */}
           <div className="flex justify-end space-x-2 mt-4">
             <button 
               type="button" 

@@ -22,14 +22,13 @@ Direccion.belongsTo(Cliente, {
   foreignKey: "idCliente",
 });
 
-// ✅ MODIFICACIÓN: Se agrega un alias a la relación entre Cliente y Pedido
 Cliente.hasMany(Pedido, {
   foreignKey: "idCliente",
   as: "pedidos",
 });
 Pedido.belongsTo(Cliente, {
   foreignKey: "idCliente",
-  as: "cliente", // Este es el alias que tu controlador necesita
+  as: "cliente", 
 });
 
 Cliente.hasOne(Carrito, {
@@ -71,7 +70,6 @@ Pedido.hasOne(Envio, {
   onDelete: "CASCADE",
 });
 
-// ✅ ASOCIACIONES AGREGADAS PARA PEDIDOS Y PRODUCTOS
 Pedido.belongsToMany(Producto, {
   through: PedidoProducto,
   foreignKey: "idPedido",
@@ -100,7 +98,7 @@ PedidoProducto.belongsTo(Producto, {
   foreignKey: "idProducto",
   as: "producto",
 });
-// ✅ FIN DE LAS ASOCIACIONES AGREGADAS
+
 
 module.exports = {
   sequelize,

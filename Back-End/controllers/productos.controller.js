@@ -2,9 +2,8 @@ const { Producto, Categoria, Administrador } = require("../models/index.model");
 const { validationResult } = require("express-validator");
 const path = require('path');
 const fs = require('fs');
-const { Op } = require('sequelize'); // Asegúrate de importar Op
+const { Op } = require('sequelize'); 
 
-// ⚠️ FUNCIONES DE AYUDA PARA MÚLTIPLES IMÁGENES ⚠️
 const getUploadsPath = (filename) => {
   return path.join(__dirname, '../uploads', filename.trim());
 };
@@ -16,7 +15,7 @@ const deleteProductImages = (imageString) => {
       const imagePath = getUploadsPath(imageName);
       if (fs.existsSync(imagePath)) {
         try {
-          // Usamos unlink para eliminar el archivo del sistema de archivos
+         
           fs.unlinkSync(imagePath);
         } catch (error) {
           console.error(`Error al eliminar el archivo ${imageName}:`, error);
@@ -26,9 +25,6 @@ const deleteProductImages = (imageString) => {
   }
 };
 
-// --------------------------------------------------------------------------------------
-// OBTENER TODOS LOS PRODUCTOS (CON FILTRO POR NOMBRE DE CATEGORÍA)
-// --------------------------------------------------------------------------------------
 const getProductos = async (req, res) => {
   try {
     const { page = 1, limit = 10, idCategoria, oferta = undefined, categoria } = req.query; 
@@ -36,34 +32,30 @@ const getProductos = async (req, res) => {
 
     const whereClause = { activo: true };
     
-    let categoriaIdFiltrada = idCategoria; // Mantenemos el filtro por ID existente si existe
+    let categoriaIdFiltrada = idCategoria; 
 
-    // 🚨 NUEVA LÓGICA: Si se envió el NOMBRE de la categoría
     if (categoria) {
-        // 1. Buscamos el ID de la categoría por su nombre
+        // buscamos el ID de la categoría por su nombre
         const categoriaBuscada = await Categoria.findOne({ 
             where: { 
-                nombre: categoria, // Filtramos por el nombre exacto
+                nombre: categoria, // filtra por el nombre 
                 activa: true 
             },
             attributes: ['id']
         });
 
         if (categoriaBuscada) {
-            categoriaIdFiltrada = categoriaBuscada.id; // Establecemos el ID para la consulta
+            categoriaIdFiltrada = categoriaBuscada.id; 
         } else {
-            // Si el nombre de la categoría no existe, forzamos una búsqueda vacía.
-            // Usamos un ID que nunca existirá (ej. 0)
             categoriaIdFiltrada = 0; 
         }
     }
     
-    // 2. Aplicamos el ID de la categoría
+    // alicamos el ID de la categoría
     if (categoriaIdFiltrada) {
         whereClause.idCategoria = categoriaIdFiltrada;
     }
 
-    // Filtro de oferta existente
     if (oferta !== undefined) whereClause.oferta = oferta === "true";
 
     const productos = await Producto.findAndCountAll({
@@ -96,10 +88,6 @@ const getProductos = async (req, res) => {
     });
   }
 };
-
-// --------------------------------------------------------------------------------------
-// OBTENER UN PRODUCTO POR ID
-// --------------------------------------------------------------------------------------
 const getProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -140,10 +128,6 @@ const getProducto = async (req, res) => {
   }
 };
 
-
-// --------------------------------------------------------------------------------------
-// CREAR UN NUEVO PRODUCTO
-// --------------------------------------------------------------------------------------
 const createProducto = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -196,7 +180,6 @@ const createProducto = async (req, res) => {
     });
   } catch (err) {
     console.error("Error en createProducto:", err);
-    // Si la creación falla y se subieron archivos, debemos borrarlos
     if (req.files) {
       const uploadedNames = req.files.map(file => file.filename).join(',');
       deleteProductImages(uploadedNames);
@@ -210,9 +193,6 @@ const createProducto = async (req, res) => {
   }
 };
 
-// --------------------------------------------------------------------------------------
-// ACTUALIZAR UN PRODUCTO (FUNCIÓN CORREGIDA)
-// --------------------------------------------------------------------------------------
 const updateProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -242,17 +222,15 @@ const updateProducto = async (req, res) => {
     }
     let datosActualizados = { ...req.body };
 
-    // Manejo de imágenes
+    // manejo de imágenes
     if (req.files && req.files.length > 0) {
-      // 1. Si se subieron nuevas imágenes, elimina las viejas del disco
       deleteProductImages(producto.imagen);
 
-      // 2. Crea el string con los nuevos nombres de archivo
+      //crea el string con los nuevos nombres de archivo
       const nuevosImagenesString = req.files.map(file => file.filename).join(',');
       datosActualizados.imagen = nuevosImagenesString;
 
     } else if (datosActualizados.hasOwnProperty('imagen') && datosActualizados.imagen === null) {
-      // Opción para borrar todas las imágenes si el frontend envía 'imagen: null'
       deleteProductImages(producto.imagen);
       datosActualizados.imagen = null;
     }
@@ -281,9 +259,6 @@ const updateProducto = async (req, res) => {
   }
 };
 
-// --------------------------------------------------------------------------------------
-// ELIMINAR UN PRODUCTO (SOFT DELETE)
-// --------------------------------------------------------------------------------------
 const deleteProducto = async (req, res) => {
   try {
     const { id } = req.params;

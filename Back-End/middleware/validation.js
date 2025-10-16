@@ -1,6 +1,5 @@
 const { body, param, query } = require('express-validator');
-
-// --- Validaciones para Administradores ---
+//validacion admin
 const validateAdministradorCreate = [
     body('usuario')
         .notEmpty()
@@ -47,7 +46,7 @@ const validateAdministradorId = [
 ];
 
 
-// --- Validaciones para Clientes ---
+//validacion cliente
 const validateClienteCreate = [
     body('nombre')
         .notEmpty()
@@ -104,7 +103,7 @@ const validateClienteId = [
 ];
 
 
-// --- Validaciones para Categorías ---
+//validacion categoria
 const validateCategoriaCreate = [
     body('nombre')
         .notEmpty()
@@ -131,7 +130,7 @@ const validateCategoriaId = [
 ];
 
 
-// --- Validaciones para Productos ---
+//validacion productos 
 const validateProductoCreate = [
     body('nombre')
         .notEmpty()
@@ -183,7 +182,7 @@ const validateProductoId = [
         .withMessage('El ID debe ser un número entero positivo')
 ];
 
-// --- Validaciones de paginación
+
 const validatePagination = [
     query('page')
         .optional()

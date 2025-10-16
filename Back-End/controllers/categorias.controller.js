@@ -16,7 +16,6 @@ const getCategorias = async (req, res) => {
             whereClause.activa = true; 
         }
 
-        // Búsqueda por texto en 'nombre' o 'imagenUrl'
         if (search) {
             whereClause[Op.or] = [
                 { nombre: { [Op.like]: `%${search}%` } },

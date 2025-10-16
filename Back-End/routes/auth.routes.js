@@ -6,10 +6,6 @@ const { generateTokens } = require('../utils/authUtils');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// -------------------------------------------------------------------
-// 🚨 RUTAS DE AUTENTICACIÓN TRADICIONAL (Email/Contraseña)
-// -------------------------------------------------------------------
-
 // Registrar un nuevo cliente
 router.post('/register', authController.register);
 
@@ -19,24 +15,21 @@ router.post('/login', authController.login);
 // Refrescar token
 router.post('/refresh-token', authController.refreshToken);
 
-// -------------------------------------------------------------------
-// 🚨 RUTAS DE AUTENTICACIÓN CON GOOGLE OAUTH
-// -------------------------------------------------------------------
-
-// 1️⃣ Iniciar proceso de autenticación con Google
+// Iniciar proceso de autenticación con Google
 router.get(
   '/google',
   passport.authenticate('google', {
     scope: ['profile', 'email'],
+    prompt: 'select_account'
   })
 );
 
-// 2️⃣ Callback después de autenticarse con Google
+// Callback después de autenticarse con Google
 router.get(
   '/google/callback',
   passport.authenticate('google', {
     failureRedirect: `${FRONTEND_URL}/login`,
-    session: false, // 🔒 Evitamos sesiones de Passport, usamos JWT
+    session: false, 
   }),
   (req, res) => {
     if (!req.user) {
@@ -60,7 +53,7 @@ router.get(
   }
 );
 
-// 3️⃣ Logout
+// Logout
 router.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
