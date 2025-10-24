@@ -12,6 +12,16 @@ const AdminLoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
+  const PASTEL_COLORS = {
+    background: 'bg-pink-50', 
+    card: 'bg-white',
+    title: 'text-purple-600',
+    inputFocus: 'focus:ring-indigo-300 focus:border-indigo-300',
+    submitButton: 'bg-indigo-300 hover:bg-indigo-400', 
+    errorText: 'text-red-500',
+    eyeIcon: 'text-gray-500 hover:text-purple-600',
+  };
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -39,21 +49,23 @@ const AdminLoginPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-center text-2xl font-bold">Acceso de Administrador</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className={`flex justify-center items-center min-h-screen ${PASTEL_COLORS.background}`}>
+      <div className={`w-full max-w-sm p-8 space-y-7 ${PASTEL_COLORS.card} rounded-xl shadow-2xl border border-purple-100 transform transition duration-300 hover:scale-[1.01]`}>
+        <h2 className={`text-center text-3xl font-extrabold ${PASTEL_COLORS.title}`}>
+            Admin Access
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="sr-only" htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
               name="email"
-              placeholder="Email"
+              placeholder="Email del Administrador"
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ${PASTEL_COLORS.inputFocus} transition duration-150`}
             />
           </div>
           <div className="relative"> 
@@ -66,12 +78,12 @@ const AdminLoginPage = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="w-full pr-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full pr-12 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ${PASTEL_COLORS.inputFocus} transition duration-150`}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+              className={`absolute inset-y-0 right-0 pr-4 flex items-center ${PASTEL_COLORS.eyeIcon} focus:outline-none transition duration-150`}
             >
               {showPassword ? (
                 <FaEyeSlash className="h-5 w-5" />
@@ -82,12 +94,12 @@ const AdminLoginPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-4 py-3 text-white font-bold ${PASTEL_COLORS.submitButton} rounded-lg transition duration-300 ease-in-out shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300`}
           >
             Iniciar Sesión
           </button>
         </form>
-        {error && <p className="text-center text-red-500">{error}</p>}
+        {error && <p className={`text-center text-sm mt-4 font-semibold ${PASTEL_COLORS.errorText}`}>{error}</p>}
       </div>
     </div>
   );

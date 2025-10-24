@@ -85,18 +85,16 @@ app.use("/api/productos", productoRoutes);
 app.use("/api/categorias", categoriasRoutes);
 app.use("/api/clientes", clienteRoutes);
 app.use("/api/pedidos", pedidoRoutes); 
-app.use('/api', chatRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
-
-// arranque del servidor
 
 const initializeDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log("✅ Conexión a DB - OK");
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log("✅ Tablas sincronizadas correctamente");
     console.log("📚 Tablas definidas:", Object.keys(sequelize.models));
     

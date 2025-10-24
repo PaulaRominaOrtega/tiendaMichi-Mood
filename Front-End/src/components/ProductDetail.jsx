@@ -13,6 +13,7 @@ import {
   Divider,
   IconButton,
   Alert,
+  Paper,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -24,6 +25,17 @@ import { useCart } from '../context/CartContext';
 
 const BACKEND_BASE_URL = 'http://localhost:3000'; 
 const DEFAULT_IMAGE_PATH = '/images/default.jpg'; 
+
+const pastelColors = {
+    background: '#f8f8f4', 
+    primary: '#a2d2ff', //arreglar aca
+    secondary: '#b8c4c2', 
+    text: '#4a4a4a',    
+    accent: '#ffb3c1',    
+    highlight: '#c8f0c8',  
+    lila: '#e0b5ff',    
+    buttonText: '#3b3b3b', 
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -86,10 +98,9 @@ const ProductDetail = () => {
         addToCart(product, 1); 
     }
   };
-
   const carouselSettings = {
     dots: true,
-    infinite: false, 
+    infinite: true, 
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -97,19 +108,30 @@ const ProductDetail = () => {
     arrows: false, 
   };
 
+
+  
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h6" align="center">Cargando producto...</Typography>
+      <Container maxWidth="lg" sx={{ py: 4, minHeight: '80vh', backgroundColor: pastelColors.background }}>
+        <Typography variant="h6" align="center" sx={{ color: pastelColors.text }}>Cargando producto...</Typography>
       </Container>
     );
   }
 
   if (error || !product) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4, backgroundColor: pastelColors.background }}>
         <Alert severity={error ? "error" : "warning"}>{error || 'Producto no encontrado'}</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/productos')} sx={{ mt: 2 }}>
+        <Button 
+            startIcon={<ArrowBackIcon />} 
+            onClick={() => navigate('/productos')} 
+            sx={{ 
+                mt: 2, 
+                backgroundColor: pastelColors.primary, 
+                color: pastelColors.buttonText,
+                '&:hover': { backgroundColor: '#86bfff' }
+            }}
+        >
           Volver a productos
         </Button>
       </Container>
@@ -119,131 +141,187 @@ const ProductDetail = () => {
   const displayImageUrls = product.imageUrls || [DEFAULT_IMAGE_PATH];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 6, backgroundColor: pastelColors.background }}>
       <Box sx={{ mb: 3 }}>
         <IconButton
           onClick={() => navigate('/productos')}
-          sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
+          sx={{ 
+            backgroundColor: pastelColors.primary, 
+            color: pastelColors.buttonText, 
+            '&:hover': { backgroundColor: '#86bfff' },
+            boxShadow: 1
+          }}
         >
           <ArrowBackIcon />
         </IconButton>
       </Box>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
-          <Card elevation={3}>
-            <Box sx={{ p: 2 }}>
-              <Box 
-                sx={{ 
-                  maxWidth: '100%', 
-                  height: 400, 
-                  position: 'relative' 
-                }}
-              >
-                <Slider {...carouselSettings} ref={sliderRef}>
-                  {displayImageUrls.map((url, idx) => (
-                    <Box key={idx}>
-                      <img
-                        src={url}
-                        alt={`${product.nombre} ${idx + 1}`}
-                        style={{
-                          width: '100%',
-                          height: '400px',
-                          objectFit: 'contain',
-                          borderRadius: '8px'
-                        }}
-                        onError={(e) => { 
-                            e.target.onerror = null; 
-                            e.target.src = DEFAULT_IMAGE_PATH;
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </Slider>
-                
-                {displayImageUrls.length > 1 && (
-                    <Box 
-                        sx={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            width: '100%', 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            transform: 'translateY(-50%)', 
-                            zIndex: 10 
-                        }}
-                    >
-                        <IconButton 
-                            onClick={goToPrev} 
-                            sx={{ color: 'primary.main', backgroundColor: 'rgba(255,255,255,0.7)', ml: 1 }}
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 3, backgroundColor: 'white' }}>
+        <Grid container spacing={4}>
+            
+            
+            <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-start' }}> 
+                <Card 
+                    elevation={0} 
+                    sx={{ 
+                        border: `1px solid ${pastelColors.secondary}`, 
+                        borderRadius: 2,
+                        maxWidth: 300, 
+                        width: '100%',
+                    }}
+                >
+                    <Box sx={{ p: 1 }}>
+                        <Box 
+                            sx={{ 
+                                maxWidth: '100%', 
+                                height: 380, 
+                                position: 'relative' 
+                            }}
                         >
-                            <ArrowBackIosIcon />
-                        </IconButton>
-                        <IconButton 
-                            onClick={goToNext} 
-                            sx={{ color: 'primary.main', backgroundColor: 'rgba(255,255,255,0.7)', mr: 1 }}
-                        >
-                            <ArrowForwardIosIcon />
-                        </IconButton>
+                            <Slider {...carouselSettings} ref={sliderRef}>
+                            {displayImageUrls.map((url, idx) => (
+                                <Box key={idx}>
+                                <img
+                                    src={url}
+                                    alt={`${product.nombre} ${idx + 1}`}
+                                    style={{
+                                    width: '100%',
+                                    height: '380px', 
+                                    objectFit: 'contain',
+                                    borderRadius: '8px'
+                                    }}
+                                    onError={(e) => { 
+                                        e.target.onerror = null; 
+                                        e.target.src = DEFAULT_IMAGE_PATH;
+                                    }}
+                                />
+                                </Box>
+                            ))}
+                            </Slider>
+                            
+                            {displayImageUrls.length > 1 && (
+                                <Box 
+                                    sx={{ 
+                                        position: 'absolute', 
+                                        top: '50%', 
+                                        width: '100%', 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        transform: 'translateY(-50%)', 
+                                        zIndex: 10 
+                                    }}
+                                >
+                                    <IconButton 
+                                        onClick={goToPrev} 
+                                        sx={{ color: pastelColors.buttonText, backgroundColor: pastelColors.primary, ml: 1, '&:hover': { backgroundColor: '#86bfff' } }}
+                                    >
+                                        <ArrowBackIosIcon sx={{ fontSize: '1rem' }} />
+                                    </IconButton>
+                                    <IconButton 
+                                        onClick={goToNext} 
+                                        sx={{ color: pastelColors.buttonText, backgroundColor: pastelColors.primary, mr: 1, '&:hover': { backgroundColor: '#86bfff' } }}
+                                    >
+                                        <ArrowForwardIosIcon sx={{ fontSize: '1rem' }} />
+                                    </IconButton>
+                                </Box>
+                            )}
+                        </Box>
                     </Box>
-                )}
-              
-              </Box>
-            </Box>
-          </Card>
-        </Grid>
+                </Card>
+            </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h4" component="h1" gutterBottom>{product.nombre}</Typography>
-              <Typography variant="h5" color="primary" sx={{ mb: 2, fontWeight: 'bold' }}>${product.precio}</Typography>
-              {product.oferta && product.descuento > 0 && <Chip label={`${product.descuento}% OFF`} color="error" sx={{ mb: 2 }} />}
-              <Typography variant="body1" color={product.stock > 0 ? 'success.main' : 'error.main'} sx={{ mb: 2, fontWeight: 'medium' }}>
-                {product.stock > 0 ? `Stock disponible: ${product.stock}` : 'Sin stock'}
-              </Typography>
-            </Box>
+            <Grid item xs={12} md={8}>
+                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                   
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="h4" component="h1" gutterBottom sx={{ color: pastelColors.text, fontWeight: 700 }}>
+                            {product.nombre}
+                        </Typography>
+                        <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: pastelColors.accent }}>
+                            ${product.precio}
+                        </Typography>
+                        {product.oferta && product.descuento > 0 && 
+                            <Chip 
+                                label={`${product.descuento}% OFF`} 
+                                sx={{ backgroundColor: pastelColors.accent, color: 'white', mb: 2, fontWeight: 'bold' }} 
+                            />
+                        }
+                        <Typography 
+                            variant="body1" 
+                            sx={{ mb: 2, fontWeight: 'medium', color: product.stock > 0 ? pastelColors.highlight : pastelColors.accent }}
+                        >
+                            {product.stock > 0 ? `Stock disponible: ${product.stock}` : 'Sin stock'}
+                        </Typography>
+                    </Box>
 
-            <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: 2, borderColor: pastelColors.secondary }} />
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Descripción</Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>{product.descripcion || 'Sin descripción disponible'}</Typography>
-            </Box>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" gutterBottom sx={{ color: pastelColors.text, fontWeight: 600 }}>Descripción</Typography>
+                        <Typography variant="body1" sx={{ color: pastelColors.text }} paragraph>
+                            {product.descripcion || 'Sin descripción disponible'}
+                        </Typography>
+                    </Box>
 
-            {(product.material || product.capacidad || product.caracteristicas_especiales) && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>Características</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {product.material && <Typography variant="body2"><strong>Material:</strong> {product.material}</Typography>}
-                  {product.capacidad && <Typography variant="body2"><strong>Capacidad/Tamaño:</strong> {product.capacidad}</Typography>}
-                  {product.caracteristicas_especiales && <Typography variant="body2"><strong>Características especiales:</strong> {product.caracteristicas_especiales}</Typography>}
+                    {(product.material || product.capacidad || product.caracteristicas_especiales) && (
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: pastelColors.text, fontWeight: 600 }}>Características</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 1 }}>
+                                {product.material && 
+                                    <Chip 
+                                        label={`Material: ${product.material}`} 
+                                        sx={{ backgroundColor: pastelColors.highlight, color: pastelColors.buttonText, fontWeight: 500 }}
+                                    />
+                                }
+                                {product.capacidad && 
+                                    <Chip 
+                                        label={`Capacidad/Tamaño: ${product.capacidad}`} 
+                                        sx={{ backgroundColor: pastelColors.highlight, color: pastelColors.buttonText, fontWeight: 500 }}
+                                    />
+                                }
+                                {product.caracteristicas_especiales && product.caracteristicas_especiales.split('/').map((feature, index) => (
+                                     <Chip 
+                                        key={index}
+                                        label={feature.trim()}
+                                        sx={{ backgroundColor: pastelColors.lila, color: pastelColors.buttonText, fontWeight: 500 }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
+
+                    <Divider sx={{ my: 2, borderColor: pastelColors.secondary }} />
+
+                    <Box sx={{ mt: 'auto' }}>
+                        <Typography variant="body2" color={pastelColors.text} sx={{ mb: 1 }}>
+                            Categoría: {product.categoria?.nombre || 'Sin categoría'}
+                        </Typography>
+                        
+                        <Button
+                            variant="contained"
+                            size="large"
+                            fullWidth
+                            startIcon={<ShoppingCartIcon />}
+                            onClick={handleAddToCart} 
+                            disabled={product.stock === 0}
+                            sx={{ 
+                                py: 1.5, 
+                                fontSize: '1.1rem', 
+                                fontWeight: 'bold',
+                                backgroundColor: product.stock > 0 ? pastelColors.primary : pastelColors.secondary, // Celeste para stock, Gris para sin stock
+                                color: product.stock > 0 ? pastelColors.buttonText : pastelColors.text,
+                                '&:hover': { 
+                                    backgroundColor: product.stock > 0 ? '#86bfff' : pastelColors.secondary,
+                                }
+                            }}
+                        >
+                            {product.stock > 0 ? 'Agregar al carrito' : 'Sin stock'}
+                        </Button>
+                    </Box>
                 </Box>
-              </Box>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary">Categoría: {product.categoria?.nombre || 'Sin categoría'}</Typography>
-            </Box>
-
-            <Box sx={{ mt: 'auto' }}>
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                startIcon={<ShoppingCartIcon />}
-                onClick={handleAddToCart} 
-                disabled={product.stock === 0}
-                sx={{ py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
-              >
-                {product.stock > 0 ? 'Agregar al carrito' : 'Sin stock'}
-              </Button>
-            </Box>
-          </Box>
+            </Grid>
         </Grid>
-      </Grid>
+      </Paper>
     </Container>
   );
 };

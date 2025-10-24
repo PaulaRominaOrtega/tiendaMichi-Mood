@@ -107,7 +107,7 @@ function App() {
                 <CssBaseline />
                 <Routes>
                     
-                    {/*  rutas de Administracion */}
+                    {/* rutas de Administracion */}
                     <Route path="/admin/login" element={<AdminLoginPage />} />
 
                     <Route
@@ -123,7 +123,16 @@ function App() {
                         <Route path="categorias" element={<CategoryCrud />} />
                         <Route path="clientes" element={<ClienteCrud />} />
                         <Route path="pedidos" element={<PedidoCrud />} />
-                        <Route path="pedidos/editar/:id" element={<PedidoForm />} />
+                        
+                        {/* !!! CORRECCIÓN CRÍTICA !!!
+                            La ruta de detalle debe coincidir con el enlace creado en PedidoCrud.jsx, 
+                            que es '/admin/pedidos/123' (sin la palabra 'editar'). 
+                            Como está dentro del <Route path="/admin">, la ruta relativa es "pedidos/:id".
+                            
+                            (Anterior: <Route path="pedidos/editar/:id" element={<PedidoForm />} />)
+                        */}
+                        <Route path="pedidos/:id" element={<PedidoForm />} />
+
                     </Route>
 
                     {/* rutas publicas de Autenticacion*/}

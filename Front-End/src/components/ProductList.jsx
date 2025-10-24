@@ -12,6 +12,7 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Divider from "@mui/material/Divider";
+import Pagination from "@mui/material/Pagination"; 
 
 import FilterBar from './FilterBar'; 
 
@@ -27,6 +28,10 @@ const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10; 
 
   const { addToCart } = useCart(); 
 
@@ -42,22 +47,27 @@ const ProductList = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [categoriaSlug]); 
+  }, [categoriaSlug, currentPage]); 
+  
+  useEffect(() => {
+      setCurrentPage(1);
+  }, [categoriaSlug]);
 
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
   
-    let url = `${BACKEND_BASE_URL}/api/productos?limit=100`; 
+    let url = `${BACKEND_BASE_URL}/api/productos?page=${currentPage}&limit=${itemsPerPage}`; 
     
     if (categoriaNombre) {
-    
-      url = `${BACKEND_BASE_URL}/api/productos?categoria=${categoriaNombre}&limit=100`; 
+      url = `${BACKEND_BASE_URL}/api/productos?categoria=${categoriaNombre}&page=${currentPage}&limit=${itemsPerPage}`; 
     }
     
     try {
       const res = await axios.get(url);
+      
       setProducts(res.data.data || []);
+      setTotalPages(res.data.pagination?.totalPages || 1); 
       setLoading(false);
     } catch (err) {
       console.error("Error al obtener productos:", err);
@@ -84,6 +94,12 @@ const ProductList = () => {
       e.preventDefault(); 
       addToCart(product, 1); 
   };
+  
+  const handlePageChange = (event, value) => {
+      setCurrentPage(value);
+      window.scrollTo(0, 0); 
+  };
+
 
   if (loading) {
     return (
@@ -138,7 +154,7 @@ const ProductList = () => {
       {products.length === 0 && (
           <Alert severity="info">
              {categoriaSlug 
-                ? `No se encontraron productos para la categoría "${categoriaNombre}".`
+                ? `No se encontraron productos para la categoría "${categoriaNombre}" en esta página.`
                 : "No hay productos disponibles."
              }
           </Alert>
@@ -210,7 +226,7 @@ const ProductList = () => {
                         color="primary" 
                         sx={{ fontWeight: 'bold', lineHeight: 1.2 }}
                     >
-                        ${product.precio}
+                        ${parseFloat(product.precio).toFixed(2)} 
                     </Typography>
                     
 
@@ -257,6 +273,19 @@ const ProductList = () => {
           </Card>
         ))}
       </Box>
+
+      {totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+              <Pagination 
+                  count={totalPages} 
+                  page={currentPage} 
+                  onChange={handlePageChange} 
+                  color="primary" 
+                  size="large"
+              />
+          </Box>
+      )}
+      
     </Container>
   );
 };

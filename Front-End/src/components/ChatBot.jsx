@@ -1,134 +1,222 @@
-// src/components/Chatbot.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-const Chatbot = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([]);
+// ELIMINAMOS EL IMPORT ERRÓNEO:
+// import ChatbotImage from '../../public/images/icono_chatbot.jpeg'; 
+
+function Chatbot() {
+    const [isOpen, setIsOpen] = useState(false); 
     const [input, setInput] = useState('');
+    const [messages, setMessages] = useState([{ sender: 'bot', text: '¡Hola! Pregúntame sobre el stock, precio o características de cualquier producto.' }]);
+    const EXPRESS_PORT = 3000; 
+    const API_URL = `http://localhost:${EXPRESS_PORT}/api/chat`;
+    
+    // --- Paleta de Colores Pasteles ---
+    const pastelColors = {
+        primary: '#a2d2ff',   // Celeste claro para el botón principal
+        secondary: '#b8c4c2', // Gris claro para bordes
+        accent: '#ffb3c1',    // Rosa pastel para mensajes del usuario
+        lila: '#e0b5ff',      // Lila pastel para fondo de chat
+        text: '#4a4a4a',      // Gris oscuro
+        white: 'white',
+        botMessage: '#f0f0f0', // Gris muy claro para mensajes del bot
+    };
 
-    useEffect(() => {
-        if (isOpen && messages.length === 0) {
-            const welcomeMessage = {
-                text: '¡Hola! Soy Michi-Bot de Ayuda. ¿En qué puedo ayudarte hoy? Puedes preguntar sobre nuestros productos, envíos, medios de pago o crear tu propio producto personalizado.',
-                from: 'bot'
-            };
-            setMessages([welcomeMessage]);
-        }
-    }, [isOpen, messages.length]);
+    // --- URL Estática del Ícono ---
+    // La imagen debe estar en la carpeta public/images/icono_chatbot.jpeg
+    const CHATBOT_ICON_URL = '/images/icono_chatbot.jpeg'; 
+
+    const toggleChat = () => {
+        setIsOpen(!isOpen); 
+    };
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        const userMessage = { text: input, from: 'user' };
-        setMessages(prevMessages => [...prevMessages, userMessage]);
-
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+        const userMessage = { sender: 'user', text: input };
+        setMessages((prev) => [...prev, userMessage]); 
+        setInput('');
 
         try {
-            const response = await fetch(`${API_URL}/chat`, {
+            const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: input
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: userMessage.text })
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Error HTTP: ${response.status}. Verifica que el servidor Express esté corriendo en el puerto ${EXPRESS_PORT}.`);
             }
 
             const data = await response.json();
-
-            const botMessage = {
-                text: data.message,
-                from: 'bot',
-                imageUrl: data.imageData?.imageUrl
-            };
-            setMessages(prevMessages => [...prevMessages, botMessage]);
-
-            if (data.imageGenerated && data.imageData) {
-                console.log('¡El bot generó una imagen!', data.imageData.imageUrl);
-            }
+            const botResponse = data.response || data.error || 'No se recibió una respuesta válida de la IA.';
+            
+            setMessages((prev) => [...prev, { sender: 'bot', text: botResponse }]);
 
         } catch (error) {
-            console.error('Error al comunicarse con la API:', error);
-            const errorMessage = {
-                text: '¡Ups! Algo salió mal al conectar con el servidor. Por favor, verifica que el backend esté funcionando e intenta de nuevo.',
-                from: 'bot'
-            };
-            setMessages(prevMessages => [...prevMessages, errorMessage]);
+            console.error('Error al enviar mensaje:', error);
+            setMessages((prev) => [...prev, { sender: 'bot', text: `⚠️ Lo siento, hubo un error de conexión con el servidor. Detalle: ${error.message}` }]);
         }
-
-        setInput('');
+    };
+    
+    // --- ESTILOS CON COLORES PASTELES APLICADOS ---
+    const styles = {
+        container: {
+            position: 'fixed',
+            bottom: '35px', 
+            right: '20px',
+            zIndex: 1000,
+        },
+        floatingButton: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: pastelColors.primary, // Celeste Pastel
+            color: pastelColors.text,
+            border: `2px solid ${pastelColors.secondary}`,
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            position: 'absolute', 
+            bottom: '0',
+            right: '0',
+            padding: 0 
+        },
+        chatWindow: {
+            position: 'absolute',
+            bottom: '90px', // Subimos un poco para dar espacio al botón
+            right: '0',
+            width: '350px', 
+            maxHeight: '450px', // Reducimos un poco la altura máxima
+            border: `1px solid ${pastelColors.secondary}`,
+            borderRadius: '12px', // Bordes más suaves
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            backgroundColor: pastelColors.white,
+            overflow: 'hidden',
+        },
+        chatContent: {
+            padding: '15px',
+            backgroundColor: pastelColors.lila, // Lila pastel de fondo
+            display: 'flex',
+            flexDirection: 'column',
+            height: '450px', // Controlamos la altura de la ventana
+        },
+        header: {
+            margin: '0 0 10px 0',
+            color: pastelColors.text,
+            textAlign: 'center',
+            paddingBottom: '5px',
+            borderBottom: `1px solid ${pastelColors.secondary}`,
+        },
+        messageList: {
+            flexGrow: 1, // Hace que la lista de mensajes ocupe el espacio restante
+            overflowY: 'scroll', 
+            padding: '10px 0', 
+            marginBottom: '10px', 
+            backgroundColor: pastelColors.white, 
+            borderRadius: '8px'
+        },
+        messageText: (sender) => ({
+            textAlign: sender === 'user' ? 'right' : 'left', 
+            margin: '8px 10px', 
+            backgroundColor: sender === 'user' ? pastelColors.accent : pastelColors.botMessage, // Rosa para usuario, gris claro para bot
+            color: pastelColors.text,
+            padding: '10px 12px', 
+            borderRadius: '20px',
+            maxWidth: '75%',
+            marginLeft: sender === 'user' ? 'auto' : '10px',
+            marginRight: sender === 'user' ? '10px' : 'auto',
+            wordWrap: 'break-word',
+            fontSize: '0.9rem'
+        }),
+        iconImage: {
+            width: '100%', 
+            height: '100%',
+            borderRadius: '50%',
+            objectFit: 'cover'
+        },
+        inputContainer: {
+            display: 'flex',
+            alignItems: 'center', 
+            gap: '10px', 
+            paddingTop: '10px',
+            borderTop: `1px solid ${pastelColors.secondary}`
+        },
+        inputField: {
+            flexGrow: 1, 
+            padding: '10px', 
+            borderRadius: '20px', 
+            border: `1px solid ${pastelColors.secondary}`,
+            color: pastelColors.text,
+        },
+        sendButton: {
+            padding: '10px 15px', 
+            borderRadius: '20px', 
+            border: 'none', 
+            backgroundColor: pastelColors.primary, // Celeste Pastel
+            color: pastelColors.buttonText, 
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            flexShrink: 0
+        }
     };
 
-    const toggleChat = () => {
-        setIsOpen(!isOpen);
-    };
 
     return (
-        <div>
-            <div 
-                onClick={toggleChat}
-                className="fixed bottom-6 right-6 z-50 cursor-pointer flex flex-col items-center transform transition-transform hover:scale-105"
-            >
-    
-                <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-lg border border-gray-300">
-                    <img 
-                        src="/images/avatar.jpeg"
-                        alt="Chatbot de Michis" 
-                        className="w-12 h-12"
-                    />
-                </div>
-                <span className="mt-1 text-sm text-gray-700 font-semibold">Michi-Bot de Ayuda</span>
-            </div>
-
+        <div style={styles.container}>
+          
             {isOpen && (
-                <div className="fixed bottom-24 right-6 w-80 h-96 bg-white border border-gray-300 rounded-xl shadow-lg flex flex-col z-50 overflow-hidden">
-                    <div className="flex-grow p-4 overflow-y-auto flex flex-col space-y-2">
-                        {messages.map((msg, index) => (
-                            <div
-                                key={index}
-                                className={`p-3 rounded-lg max-w-[80%] break-words ${
-                                    msg.from === 'user'
-                                        ? 'bg-blue-500 text-white self-end rounded-br-lg'
-                                        : 'bg-gray-200 text-black self-start rounded-bl-lg'
-                                }`}
+                <div style={styles.chatWindow}>
+                    <div style={styles.chatContent}>
+                        <h3 style={styles.header}>Michi-Bot</h3>
+                        <div style={styles.messageList}>
+                            {messages.map((msg, index) => (
+                                <p key={index} style={styles.messageText(msg.sender)}>
+                                    {/* Ya no incluimos "Tú:" o "Bot:" para un look más limpio */}
+                                    {msg.text}
+                                </p>
+                            ))}
+                        </div>
+                        <div style={styles.inputContainer}>
+                            <input 
+                                type="text" 
+                                value={input} 
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                placeholder="Ej: ¿Hay stock de tazas?"
+                                style={styles.inputField}
+                            />
+                            <button 
+                                onClick={sendMessage} 
+                                style={styles.sendButton}
                             >
-                                {msg.text}
-                                {msg.imageUrl && (
-                                    <img src={msg.imageUrl} alt="Producto generado por IA" className="mt-2 rounded-lg" />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="p-2 border-t border-gray-300 flex">
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    sendMessage();
-                                }
-                            }}
-                            className="flex-grow p-2 rounded-lg border border-gray-300 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Escribe un mensaje..."
-                        />
-                        <button
-                            onClick={sendMessage}
-                            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                        >
-                            Enviar
-                        </button>
+                                Enviar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
+
+            <button 
+                onClick={toggleChat} 
+                style={styles.floatingButton}
+                aria-label={isOpen ? "Cerrar Chatbot" : "Abrir Chatbot"}
+            >
+                {isOpen ? (
+                    '💬'
+                ) : (
+                    <img 
+                        src={CHATBOT_ICON_URL} 
+                        alt="Abrir Chatbot" 
+                        style={styles.iconImage}
+                    />
+                )}
+            </button>
+
         </div>
     );
-};
+}
 
 export default Chatbot;

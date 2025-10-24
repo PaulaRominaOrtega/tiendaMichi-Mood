@@ -1,9 +1,9 @@
-// routes/chat.routes.js
+// Back-End/routes/chatRoutes.js
 const express = require('express');
-const { handleMessage } = require('../controllers/chat.controller');
-
 const router = express.Router();
+const chatController = require('../controllers/chat.controller');
 
-router.post('/chat', handleMessage);
+// Definimos el endpoint POST para las peticiones de chat
+router.post('/', chatController.handleChat); 
 
 module.exports = router;
