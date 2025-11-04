@@ -184,7 +184,6 @@ const createPedido = async (req, res) => {
         } else {
              console.warn("Socket.IO no está disponible. No se pudo enviar la notificación en tiempo real.");
         }
-        // ----------------------------------------------------
 
 
         if (sendNewOrderEmail) {
@@ -194,7 +193,7 @@ const createPedido = async (req, res) => {
             
             await sendNewOrderEmail({
                 to: adminEmail, 
-                subject: `🚨 Nuevo Pedido #${pedidoId}`,
+                subject: `Nuevo Pedido #${pedidoId}`,
                 templateName: 'new_order_admin', 
                 data: { 
                     pedidoId: pedidoId, 

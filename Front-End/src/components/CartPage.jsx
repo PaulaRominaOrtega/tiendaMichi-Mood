@@ -24,6 +24,38 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const DEFAULT_IMAGE_PATH = '/images/default.jpg'; 
 
+const pastelColors = {
+    background: '#f8f8f4', 
+    primary: '#ffb3c1',
+    primaryDark: '#e098a5', 
+    secondary: '#c8f0c8', 
+    secondaryDark: '#aae0aa',
+    buttonText: '#3b3b3b', 
+    text: '#4a4a4a',
+    success: '#90EE90',
+    error: '#f44336', 
+    warning: '#ffc107',
+    paper: 'white',
+};
+
+const pastelTheme = {
+    primary: {
+        main: pastelColors.primary,
+        light: pastelColors.primary,
+        dark: pastelColors.primaryDark,
+    },
+    secondary: {
+        main: pastelColors.secondary,
+        dark: pastelColors.secondaryDark,
+    },
+    error: {
+        main: pastelColors.error,
+    },
+    warning: {
+        main: pastelColors.warning,
+    },
+};
+
 
 const getFirstImageUrl = (imageString) => {
     if (!imageString) return DEFAULT_IMAGE_PATH;
@@ -96,7 +128,7 @@ const CartPage = () => {
                                 || error.response?.data?.message 
                                 || "Error desconocido al procesar el pedido. Intenta nuevamente.";
             
-            setNotification({ message: `❌ Fallo: ${errorMessage}`, severity: "error" });
+            setNotification({ message: ` Fallo: ${errorMessage}`, severity: "error" });
             
         } finally {
             setIsLoading(false);
@@ -106,12 +138,22 @@ const CartPage = () => {
     
     if (cart.length === 0) {
         return (
-            <Container maxWidth="md" sx={{ py: 5, textAlign: 'center' }}>
-                <Typography variant="h5" gutterBottom>Tu carrito está vacío 😔</Typography>
-                <Typography variant="body1" sx={{ mb: 3 }}>
+            <Container maxWidth="md" sx={{ py: 5, textAlign: 'center', backgroundColor: pastelColors.background }}>
+                <Typography variant="h5" gutterBottom sx={{ color: pastelColors.text }}>Tu carrito está vacío </Typography>
+                <Typography variant="body1" sx={{ mb: 3, color: pastelColors.text }}>
                     ¡Explora nuestros productos y llena tu carrito!
                 </Typography>
-                <Button variant="contained" component={Link} to="/productos" sx={{ mt: 2 }}>
+                <Button 
+                    variant="contained" 
+                    component={Link} 
+                    to="/productos" 
+                    sx={{ 
+                        mt: 2,
+                        backgroundColor: pastelColors.secondary,
+                        color: pastelColors.buttonText,
+                        '&:hover': { backgroundColor: pastelColors.secondaryDark }
+                    }}
+                >
                     Ver Productos
                 </Button>
             </Container>
@@ -119,9 +161,9 @@ const CartPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography variant="h3" component="h1" gutterBottom>
-                Tu Carrito ({totalItems} {totalItems === 1 ? 'ítem' : 'ítems'})
+        <Container maxWidth="lg" sx={{ py: 4, backgroundColor: pastelColors.background }}>
+            <Typography variant="h3" component="h1" gutterBottom sx={{ color: pastelColors.text }}>
+                Tu Carrito: {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}
             </Typography>
             <Divider sx={{ mb: 4 }} />
 
@@ -140,7 +182,15 @@ const CartPage = () => {
             <Grid container spacing={4}>
                 <Grid item xs={12} md={8}>
                     {cart.map((item) => (
-                        <Card key={item.id} sx={{ display: 'flex', mb: 2, boxShadow: 1 }}>
+                        <Card 
+                            key={item.id} 
+                            sx={{ 
+                                display: 'flex', 
+                                mb: 2, 
+                                boxShadow: 1, 
+                                backgroundColor: pastelColors.paper 
+                            }}
+                        >
                             <CardMedia
                                 component="img"
                                 sx={{ width: 100, height: 100, objectFit: 'cover' }}
@@ -149,13 +199,16 @@ const CartPage = () => {
                             />
                             <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                                 <CardContent sx={{ flex: '1 0 auto', pb: 1 }}>
-                                    <Typography component="div" variant="h6">
+                                    <Typography component="div" variant="h6" sx={{ color: pastelColors.text }}>
                                         {item.nombre}
                                     </Typography>
-                                    <Typography variant="subtitle1" color="text.secondary">
+                                    <Typography variant="subtitle1" color={pastelColors.text}>
                                         ${item.precio} c/u
                                     </Typography>
-                                    <Typography variant="caption" color={item.quantity > item.stock ? 'error' : 'text.secondary'}>
+                                    <Typography 
+                                        variant="caption" 
+                                        color={item.quantity > item.stock ? pastelTheme.error.main : pastelColors.text}
+                                    >
                                         Stock disponible: {item.stock}
                                     </Typography>
                                 </CardContent>
@@ -165,25 +218,33 @@ const CartPage = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                                     <IconButton 
                                         onClick={() => updateQuantity(item.id, -1)} 
-                                        color="primary"
                                         size="small"
                                         disabled={item.quantity <= 1}
+                                        sx={{ 
+                                            color: pastelColors.buttonText, 
+                                            backgroundColor: pastelColors.secondary, 
+                                            '&:hover': { backgroundColor: pastelColors.secondaryDark }
+                                        }}
                                     >
                                         <RemoveIcon />
                                     </IconButton>
-                                    <Typography variant="h6" sx={{ minWidth: 20, textAlign: 'center' }}>
+                                    <Typography variant="h6" sx={{ minWidth: 20, textAlign: 'center', color: pastelColors.text }}>
                                         {item.quantity}
                                     </Typography>
                                     <IconButton 
                                         onClick={() => updateQuantity(item.id, 1)} 
-                                        color="primary"
                                         size="small"
                                         disabled={item.quantity >= item.stock} 
+                                        sx={{ 
+                                            color: pastelColors.buttonText, 
+                                            backgroundColor: pastelColors.secondary,
+                                            '&:hover': { backgroundColor: pastelColors.secondaryDark } 
+                                        }}
                                     >
                                         <AddIcon />
                                     </IconButton>
                                 </Box>
-                                <Typography variant="h5" sx={{ mr: 2, minWidth: 80, textAlign: 'right' }}>
+                                <Typography variant="h5" sx={{ mr: 2, minWidth: 80, textAlign: 'right', color: pastelColors.primaryDark, fontWeight: 'bold' }}>
                                     ${(item.precio * item.quantity).toFixed(2)}
                                 </Typography>
                                 <IconButton 
@@ -197,37 +258,53 @@ const CartPage = () => {
                     ))}
                 </Grid>
 
+                {/* Resumen pedido */}
                 <Grid item xs={12} md={4}>
-                    <Card elevation={3}>
+                    <Card elevation={3} sx={{ backgroundColor: pastelColors.paper }}>
                         <CardContent>
-                            <Typography variant="h5" gutterBottom>
+                            <Typography variant="h5" gutterBottom sx={{ color: pastelColors.text }}>
                                 Resumen del Pedido
                             </Typography>
                             <Divider sx={{ my: 1 }} />
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Typography variant="body1">Subtotal ({totalItems} productos):</Typography>
-                                <Typography variant="body1">${totalPrice.toFixed(2)}</Typography>
+                                <Typography variant="body1" sx={{ color: pastelColors.text }}>Subtotal ({totalItems} productos):</Typography>
+                                <Typography variant="body1" sx={{ color: pastelColors.text }}>${totalPrice.toFixed(2)}</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                <Typography variant="body1">Costo de Envío:</Typography>
-                                <Typography variant="body1">Gratis</Typography>
+                                <Typography variant="body1" sx={{ color: pastelColors.text }}>Costo de Envío:</Typography>
+                                <Typography variant="body1" sx={{ color: pastelColors.text }}>Gratis</Typography>
                             </Box>
                             <Divider sx={{ my: 1 }} />
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="h4">Total:</Typography>
-                                <Typography variant="h4">${totalPrice.toFixed(2)}</Typography>
+                                <Typography variant="h4" sx={{ color: pastelColors.text }}>Total:</Typography>
+                                <Typography variant="h4" sx={{ color: pastelColors.primaryDark, fontWeight: 'bold' }}>${totalPrice.toFixed(2)}</Typography>
                             </Box>
                             
                             <Button 
                                 variant="contained" 
-                                color="primary" 
                                 fullWidth 
-                                sx={{ mt: 3, py: 1.5 }}
-                                onClick={handleCheckout} 
-                                disabled={isLoading || hasStockError || !isAuthenticated} 
-                                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+                                sx={{ 
+                                    mt: 3, 
+                                    py: 1.5,
+                                    backgroundColor: isAuthenticated ? pastelColors.primary : pastelColors.secondaryDark,
+                                    color: pastelColors.buttonText,
+                                    fontWeight: 'bold',
+                                    '&:hover': { 
+                                        backgroundColor: isAuthenticated ? pastelColors.primaryDark : pastelColors.secondary, 
+                                    },
+                                    '&:disabled': { 
+                                        backgroundColor: pastelColors.secondaryDark, 
+                                        color: pastelColors.text 
+                                    }
+                                }}
+                                // Si esta autenticado, va a checkout. si no, al /login.
+                                onClick={isAuthenticated ? handleCheckout : () => navigate('/login')}
+                                disabled={isLoading || hasStockError} 
                             >
-                                {isLoading ? 'Procesando...' : (isAuthenticated ? 'Proceder al Pago' : 'Inicia Sesión para Pagar')}
+                                {
+                                    isLoading ? 'Procesando...' : 
+                                    (isAuthenticated ? 'Proceder al Pago' : 'Iniciar Sesión para Pagar')
+                                }
                             </Button>
 
                              {hasStockError && (
@@ -237,8 +314,8 @@ const CartPage = () => {
                             )}
                             
                             {!isAuthenticated && (
-                                <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                                    Debes iniciar sesión para realizar la compra.
+                                <Typography variant="caption" color={pastelTheme.warning.main} sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                                    Inicia sesión para realizar la compra.
                                 </Typography>
                             )}
                         </CardContent>

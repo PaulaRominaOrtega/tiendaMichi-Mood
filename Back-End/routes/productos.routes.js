@@ -11,13 +11,16 @@ const {
 const { verificarJWTAdmin } = require("../middleware/auth.middleware"); 
 const upload = require("../middleware/upload.middleware"); 
 
-// GET /api/productos - Obtener todos los productos (con paginación)
+// GET /api/productos/search - Obtener productos para el autocomplete (NUEVA RUTA)
+router.get("/search", productoController.searchProductos); 
+
+// GET /api/productos - Obtener todos los productos (con paginación y filtros)
 router.get("/", validatePagination, productoController.getProductos);
 
 // GET /api/productos/:id - Obtener un producto por ID
 router.get("/:id", validateProductoId, productoController.getProducto);
 
-// rutas Protegidas para adminin
+// --- Rutas Protegidas para Administrador ---
 
 // POST /api/productos - Crear un nuevo producto (con subida de archivos)
 router.post(

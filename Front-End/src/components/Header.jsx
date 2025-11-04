@@ -16,6 +16,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Badge from '@mui/material/Badge';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import MenuIcon from '@mui/icons-material/Menu'; 
 
 import useCategories from '../hooks/useCategories';
 import { useCart } from '../context/CartContext';
@@ -45,12 +46,17 @@ function Header() {
 
   const [anchorElProducts, setAnchorElProducts] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [anchorElNav, setAnchorElNav] = React.useState(null);
 
   const handleOpenProductsMenu = (event) => setAnchorElProducts(event.currentTarget);
   const handleCloseProductsMenu = () => setAnchorElProducts(null);
+  
+  const handleOpenNavMenu = (event) => setAnchorElNav(event.currentTarget);
+  const handleCloseNavMenu = () => setAnchorElNav(null);
 
   const handleCategoryClick = (categoryName) => {
     handleCloseProductsMenu();
+    handleCloseNavMenu(); 
     const slug = categoryName.toLowerCase().replace(/\s/g, '-');
     navigate(`/productos?categoria=${slug}`);
   };
@@ -61,9 +67,10 @@ function Header() {
   };
 
   return (
-    <AppBar position="static" sx={{ mt: 2, backgroundColor: NEUTRAL_GRAY_BG, boxShadow: 'none' }}>
+    <AppBar position="sticky" sx={{ mt: 0, backgroundColor: NEUTRAL_GRAY_BG, boxShadow: 'none', zIndex: 1100 }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
+          
           <Box
             component={Link}
             to="/"
@@ -78,10 +85,59 @@ function Header() {
               src="/images/michi.png"
               alt="Logo MichiMood"
               style={{ height: 62, width: 'auto', borderRadius: '12px' }} 
-              
             />
           </Box>
+          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+            <IconButton
+              size="large"
+              aria-label="menú de navegación"
+              aria-controls="menu-appbar-nav"
+              aria-haspopup="true"
+              onClick={handleOpenNavMenu}
+              color="inherit"
+            >
+              <MenuIcon />
+            </IconButton>
+            
+            <Menu
+              id="menu-appbar-nav"
+              anchorEl={anchorElNav}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              keepMounted
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              open={Boolean(anchorElNav)}
+              onClose={handleCloseNavMenu}
+              sx={{ display: { xs: 'block', md: 'none' } }}
+            >
+              {pagesWithRoutes.map((page) => (
+                <MenuItem key={page.name} onClick={handleCloseNavMenu} component={Link} to={page.path}>
+                  <Typography textAlign="center">{page.name.toUpperCase()}</Typography>
+                </MenuItem>
+              ))}
 
+              <MenuItem onClick={handleOpenProductsMenu}>
+                <Typography textAlign="center">CATEGORÍAS</Typography>
+              </MenuItem>
+              
+              <Menu
+                id="simple-menu-mobile"
+                anchorEl={anchorElProducts}
+                open={Boolean(anchorElProducts)}
+                onClose={handleCloseProductsMenu}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              >
+                {loading && <MenuItem disabled><CircularProgress size={20} /></MenuItem>}
+                {error && <MenuItem disabled><Alert severity="error">Error al cargar categorías</Alert></MenuItem>}
+                {!loading && categoriesToShow.length > 0 && categoriesToShow.map((category) => (
+                  <MenuItem key={category.id} onClick={() => handleCategoryClick(category.nombre)}>
+                    {category.nombre}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Menu>
+          </Box>
+          
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-start' }}>
             {pagesWithRoutes.map((page) => (
               <Button
@@ -133,9 +189,8 @@ function Header() {
               ))}
             </Menu>
           </Box>
-
+          
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1 }}>
-
             {isAuthenticated ? (
               <Button
                 color="inherit"

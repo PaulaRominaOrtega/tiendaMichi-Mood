@@ -1,23 +1,55 @@
-// src/components/RegisterPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Container, Button, TextField, Paper, Alert } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 const REGISTER_URL = "http://localhost:3000/api/auth/register"; 
+const STORAGE_KEY = 'registerFormDraft'; //localStorage
 
 const RegisterPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const getInitialState = () => {
+        try {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                const draft = JSON.parse(savedData);
+                return {
+                    name: draft.name || '',
+                    email: draft.email || '',
+                    telefono: draft.telefono || '',
+                };
+            }
+        } catch (error) {
+            console.error("Error al leer el borrador de registro:", error);
+        }
+        return { name: '', email: '', telefono: '' };
+    };
     
-    const [email, setEmail] = useState('');
+    const initialState = getInitialState();
+    const [name, setName] = useState(initialState.name); 
+    const [email, setEmail] = useState(initialState.email);
+    const [telefono, setTelefono] = useState(initialState.telefono); 
+    
     const [password, setPassword] = useState('');
-    const [name, setName] = useState(''); 
-    const [telefono, setTelefono] = useState(''); 
     const [confirmPassword, setConfirmPassword] = useState('');
     
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const draft = {
+            name,
+            email,
+            telefono,
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+        } catch (error) {
+            console.error("Error al guardar borrador de registro:", error);
+        }
+    }, [name, email, telefono]); 
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -28,7 +60,7 @@ const RegisterPage = () => {
             return;
         }
         if (!email || !password || !name || !telefono) {
-            setError('Por favor, completa todos los campos, incluyendo el teléfono.');
+            setError('Por favor, completa todos los campos.');
             return;
         }
 
@@ -54,6 +86,9 @@ const RegisterPage = () => {
                 const errorMessage = data.message || `Error ${response.status}: Error al registrar la cuenta.`;
                 throw new Error(errorMessage);
             }
+            
+            localStorage.removeItem(STORAGE_KEY);
+            
             login(data); 
             navigate('/', { replace: true });
 
@@ -68,7 +103,7 @@ const RegisterPage = () => {
         <Container maxWidth="xs" sx={{ mt: 5, mb: 5 }}>
             <Paper elevation={3} sx={{ p: 4 }}>
                 <Typography variant="h5" component="h1" gutterBottom textAlign="center" sx={{ fontWeight: 600 }}>
-                    <span style={{ color: '#ffb6c1' }}>Únete</span> a la Comunidad MichiMood
+                    <span style={{ color: '#ffb6c1' }}>Únete</span> a la Comunidad MichiMood 🐈
                 </Typography>
                 
                 {error && <Box sx={{ mb: 2 }}><Alert severity="error">{error}</Alert></Box>}

@@ -18,7 +18,7 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// Estrategia de Google
+// Google
 passport.use(
     new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,

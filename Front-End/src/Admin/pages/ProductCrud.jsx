@@ -1,4 +1,3 @@
-// src/Admin/pages/ProductCrud.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import ProductForm from '../components/ProductForm';
@@ -110,8 +109,7 @@ const ProductCrud = () => {
           />
         </div>
       )}
-
-      {/* Lista de Productos y Botón de Acción */}
+      
       <div className="overflow-x-auto mt-6">
         <div className="flex justify-between items-center mb-4">
             <h3 className={`text-xl font-semibold ${PASTEL_COLORS.text}`}>Lista de Productos</h3>

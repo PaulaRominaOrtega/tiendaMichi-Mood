@@ -11,7 +11,7 @@ const Producto = db.Producto;
  */
 async function consultarStock(nombreProducto) {
     if (!Producto) {
-        console.error("❌ Error interno: El modelo 'Producto' no está definido.");
+        console.error("Error interno: El modelo 'Producto' no está definido.");
         return JSON.stringify({
             status: 'error',
             message: 'Error interno de configuración: El modelo de Producto no se cargó correctamente.'

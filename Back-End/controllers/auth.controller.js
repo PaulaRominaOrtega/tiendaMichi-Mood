@@ -1,5 +1,5 @@
 const Cliente = require("../models/cliente.model");
-const Administrador = require("../models/administrador.model"); // 🚨 DESCOMENTAR: Necesitamos este modelo
+const Administrador = require("../models/administrador.model"); 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 

@@ -1,4 +1,3 @@
-// controllers/carritos.controller.js
 const { Carrito } = require("../models/index.model");
 const { validationResult } = require("express-validator");
 

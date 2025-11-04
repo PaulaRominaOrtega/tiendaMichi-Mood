@@ -153,7 +153,6 @@ export const CartProvider = ({ children }) => {
     const clearCart = useCallback(() => { 
         setCart([]);
         localStorage.removeItem('michimood_cart'); 
-        showNotification('Sesión cerrada', 'info');
     }, [showNotification]);
     
     const loadCartFromServer = useCallback(async (clienteId, accessToken) => {

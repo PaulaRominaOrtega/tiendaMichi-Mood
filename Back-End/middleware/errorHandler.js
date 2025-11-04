@@ -1,4 +1,3 @@
-// Middleware para manejo centralizado de errores
 const errorHandler = (err, req, res, next) => {
     console.error('Error capturado por middleware:', err);
 
@@ -43,7 +42,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // Error por defecto
     res.status(err.status || 500).json({
         success: false,
         error: 'Error interno del servidor',
@@ -51,7 +49,7 @@ const errorHandler = (err, req, res, next) => {
     });
 };
 
-// Middleware para rutas no encontradas
+// midleware para rutas no encontradas
 const notFound = (req, res, next) => {
     res.status(404).json(
         {

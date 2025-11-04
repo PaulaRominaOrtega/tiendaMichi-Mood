@@ -1,4 +1,3 @@
-// src/components/ClienteCrud.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ClienteForm from '../components/ClienteForm';
@@ -132,7 +131,6 @@ const ClienteCrud = () => {
             <table className="min-w-full">
               <thead>
                 <tr className={`${PASTEL_COLORS.tableHeader} text-sm leading-normal`}>
-                  {/* N° Cliente: Centrado */}
                   <th className={`py-3 px-6 text-center ${PASTEL_COLORS.tableHeaderText}`}>N° Cliente</th>
                   <th className={`py-3 px-6 text-left ${PASTEL_COLORS.tableHeaderText}`}>Nombre</th>
                   <th className={`py-3 px-6 text-left ${PASTEL_COLORS.tableHeaderText}`}>Email</th>

@@ -34,7 +34,7 @@ const sendNewOrderEmail = async ({ to, subject, data }) => {
             subject: subject,
             html: `
                 <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                    <h2>¡🚨 Nuevo Pedido #${data.pedidoId} Recibido!</h2>
+                    <h2>¡Nuevo Pedido #${data.pedidoId} Recibido!</h2>
                     <p>El cliente <strong>${data.clienteNombre}</strong> ha realizado un nuevo pedido.</p>
                     <p><strong>Total del Pedido:</strong> <span style="font-size: 1.2em; color: #2a6496;">$${data.total.toFixed(2)}</span></p>
                     

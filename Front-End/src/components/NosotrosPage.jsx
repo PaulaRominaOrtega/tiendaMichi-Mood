@@ -1,10 +1,9 @@
-// src/components/NosotrosPage.jsx 
 import React from 'react';
 import { Box, Typography, Container, Grid, Avatar } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 const RootContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: '#fdf3f8', 
+  backgroundColor: '#fdf3f8',
   padding: theme.spacing(6, 0),
   minHeight: '80vh',
 }));
@@ -16,7 +15,7 @@ const StyledSection = styled(Box)(({ theme }) => ({
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
-  color: '#8b4513', 
+  color: '#8b4513',
   marginBottom: theme.spacing(4),
   fontWeight: 700,
   fontSize: '2.5rem',
@@ -26,7 +25,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const PastelText = styled(Typography)(({ theme }) => ({
-  color: '#a59e9c', 
+  color: '#a59e9c',
   lineHeight: 1.8,
   maxWidth: 800,
   margin: '0 auto',
@@ -44,7 +43,7 @@ const AvatarContainer = styled(Box)(({ theme }) => ({
     right: -10,
     bottom: -10,
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 192, 203, 0.3)', 
+    backgroundColor: 'rgba(255, 192, 203, 0.3)',
     zIndex: -1,
   },
 }));
@@ -57,10 +56,10 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
 }));
 
 const HighlightBox = styled(Box)(({ theme }) => ({
-  backgroundColor: '#e0f2f7', 
+  backgroundColor: '#e0f2f7',
   padding: theme.spacing(4),
   borderRadius: theme.shape.borderRadius * 2,
-  boxShadow: `0px 5px 15px rgba(173, 216, 230, 0.4)`, 
+  boxShadow: `0px 5px 15px rgba(173, 216, 230, 0.4)`,
   textAlign: 'left',
   transition: 'transform 0.3s ease-in-out',
   '&:hover': {
@@ -80,19 +79,20 @@ const NosotrosPage = () => {
   return (
     <RootContainer>
       <Container maxWidth="md">
-    
+
         <StyledSection sx={{ mt: 4, mb: 8 }}>
-          <img 
-            src="/images/Nosotros.jpg" 
-            alt="MichiMood Hero" 
-            style={{ 
-              maxWidth: '100%', 
-              height: 'auto', 
-              borderRadius: '15px', 
-              boxShadow: '0px 10px 30px rgba(0,0,0,0.1)',
-              marginBottom: '40px'
-            }} 
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}> 
+            <img
+              src="/images/Nosotros.jpg"
+              alt="MichiMood Hero"
+              style={{
+                maxWidth: '50%', 
+                height: 'auto', 
+                borderRadius: '15px',
+                boxShadow: '0px 5px 15px rgba(0,0,0,0.1)', 
+              }}
+            />
+          </Box>
           <SectionTitle variant="h3" component="h1">
             <CatIcon>🐾</CatIcon> La Historia Detrás de MichiMood <CatIcon>✨</CatIcon>
           </SectionTitle>
@@ -103,9 +103,9 @@ const NosotrosPage = () => {
 
         <StyledSection>
           <AvatarContainer>
-            <StyledAvatar 
-                alt="Gabriela Martínez" 
-                src="/images/foto.jpg" 
+            <StyledAvatar
+                alt="Gabriela Martínez"
+                src="/images/foto.jpg"
             />
           </AvatarContainer>
           <SectionTitle variant="h4">

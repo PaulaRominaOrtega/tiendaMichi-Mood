@@ -28,7 +28,7 @@ const DEFAULT_IMAGE_PATH = '/images/default.jpg';
 
 const pastelColors = {
     background: '#f8f8f4', 
-    primary: '#a2d2ff', //arreglar aca
+    primary: '#a2d2ff', 
     secondary: '#b8c4c2', 
     text: '#4a4a4a',    
     accent: '#ffb3c1',    

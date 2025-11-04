@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 // Registrar un nuevo cliente
 router.post('/register', authController.register);
 
-// Iniciar sesión (cliente/administrador)
+// Iniciar sesión
 router.post('/login', authController.login);
 
 // Refrescar token
@@ -39,7 +39,7 @@ router.get(
     // Generamos los tokens JWT
     const tokens = generateTokens(req.user, 'cliente');
 
-    // Redirigimos al Front-End con los tokens y datos
+    // Redirigimos al Front con los tokens y datos
     const redirectUrl =
       `${FRONTEND_URL}/login-success?` +
       `accessToken=${tokens.accessToken}` +
@@ -47,7 +47,7 @@ router.get(
       `&clienteId=${req.user.id}` +
       `&email=${encodeURIComponent(req.user.email)}`;
 
-    console.log("✅ Google login exitoso. Redirigiendo a:", redirectUrl);
+    console.log("Google login exitoso. Redirigiendo a:", redirectUrl);
 
     res.redirect(redirectUrl);
   }

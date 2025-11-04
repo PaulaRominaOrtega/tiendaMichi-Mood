@@ -1,15 +1,9 @@
-// Back-End/controllers/chat.controller.js
 const { GoogleGenAI } = require('@google/genai');
 const { consultarStock } = require('../services/stockService'); 
 
-// Inicializar el cliente de Gemini
+// Inicializar el cliente 
 const ai = new GoogleGenAI(process.env.GEMINI_API_KEY); 
 const model = 'gemini-2.5-flash';
-
-// ----------------------------------------------------
-// INSTRUCCIÓN DE SISTEMA MEJORADA PARA CONCISIÓN 🚨
-// AÑADE UNA REGLA PARA NO INCLUIR DATOS ADICIONALES.
-// ----------------------------------------------------
 const SYSTEM_INSTRUCTION = `
 Eres Michi-Bot, un asistente de ventas de un ecommerce. Debes ser muy preciso al responder basándote en la información de la base de datos.
 
@@ -44,7 +38,7 @@ async function handleChat(req, res) {
     const { prompt } = req.body;
 
     if (!prompt) {
-        return res.status(400).json({ error: 'Falta el mensaje (prompt) del usuario.' });
+        return res.status(400).json({ error: 'Falta el mensaje del usuario.' });
     }
 
     try {
@@ -76,7 +70,7 @@ async function handleChat(req, res) {
         res.json({ response: response.text });
 
     } catch (error) {
-        console.error('❌ Error en handleChat (controlador de la IA):', error);
+        console.error('Error en handleChat (controlador de la IA):', error);
         res.status(500).json({ error: 'Ocurrió un error interno al procesar la solicitud de la IA.' });
     }
 }

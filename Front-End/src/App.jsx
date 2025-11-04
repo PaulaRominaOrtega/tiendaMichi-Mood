@@ -17,6 +17,7 @@ import LoginPage from './components/LoginPage';
 import LoginSuccessHandler from './components/LoginSuccessHandler'; 
 import RegisterPage from './components/RegisterPage'; 
 import FilterBar from './components/FilterBar'; 
+import Scroll from './components/Scroll';
 
 
 //Importaciones Administración
@@ -33,7 +34,7 @@ import PedidoForm from './Admin/components/PedidoForm';
 import { CartProvider, useCart } from './context/CartContext'; 
 import { AuthProvider, useAuth } from './context/AuthContext'; 
 
-// Componente "guardián" para proteger las rutas de Usuario
+// Componente guardián para proteger las rutas de Usuario
 const PrivateUserRoute = ({ children }) => {
 
     const { isAuthenticated, loading } = useAuth(); 
@@ -102,6 +103,7 @@ const MainLayout = ({ children }) => (
 function App() {
   return (
     <Router>
+        <Scroll />
         <AuthProvider> 
             <CartProvider>
                 <CssBaseline />
@@ -123,14 +125,6 @@ function App() {
                         <Route path="categorias" element={<CategoryCrud />} />
                         <Route path="clientes" element={<ClienteCrud />} />
                         <Route path="pedidos" element={<PedidoCrud />} />
-                        
-                        {/* !!! CORRECCIÓN CRÍTICA !!!
-                            La ruta de detalle debe coincidir con el enlace creado en PedidoCrud.jsx, 
-                            que es '/admin/pedidos/123' (sin la palabra 'editar'). 
-                            Como está dentro del <Route path="/admin">, la ruta relativa es "pedidos/:id".
-                            
-                            (Anterior: <Route path="pedidos/editar/:id" element={<PedidoForm />} />)
-                        */}
                         <Route path="pedidos/:id" element={<PedidoForm />} />
 
                     </Route>
@@ -210,7 +204,7 @@ function App() {
                     <Route path="*" element={
                         <MainLayout>
                             <Box sx={{ textAlign: 'center', py: 10 }}>
-                                <Typography variant="h4">404 - Página no encontrada 😕</Typography>
+                                <Typography variant="h4">404 - Página no encontrada </Typography>
                                 <Typography variant="body1" sx={{ mt: 2 }}>
                                     Parece que te perdiste en el universo de la tienda.
                                 </Typography>

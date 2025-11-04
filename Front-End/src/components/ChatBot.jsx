@@ -1,8 +1,4 @@
 import React, { useState } from 'react';
-
-// ELIMINAMOS EL IMPORT ERRÓNEO:
-// import ChatbotImage from '../../public/images/icono_chatbot.jpeg'; 
-
 function Chatbot() {
     const [isOpen, setIsOpen] = useState(false); 
     const [input, setInput] = useState('');
@@ -10,19 +6,17 @@ function Chatbot() {
     const EXPRESS_PORT = 3000; 
     const API_URL = `http://localhost:${EXPRESS_PORT}/api/chat`;
     
-    // --- Paleta de Colores Pasteles ---
+    
     const pastelColors = {
-        primary: '#a2d2ff',   // Celeste claro para el botón principal
-        secondary: '#b8c4c2', // Gris claro para bordes
-        accent: '#ffb3c1',    // Rosa pastel para mensajes del usuario
-        lila: '#e0b5ff',      // Lila pastel para fondo de chat
-        text: '#4a4a4a',      // Gris oscuro
+        primary: '#a2d2ff',   
+        secondary: '#b8c4c2', 
+        accent: '#ffb3c1',    
+        lila: '#e0b5ff',      
+        text: '#4a4a4a',      
         white: 'white',
-        botMessage: '#f0f0f0', // Gris muy claro para mensajes del bot
+        botMessage: '#f0f0f0', 
     };
 
-    // --- URL Estática del Ícono ---
-    // La imagen debe estar en la carpeta public/images/icono_chatbot.jpeg
     const CHATBOT_ICON_URL = '/images/icono_chatbot.jpeg'; 
 
     const toggleChat = () => {
@@ -54,11 +48,11 @@ function Chatbot() {
 
         } catch (error) {
             console.error('Error al enviar mensaje:', error);
-            setMessages((prev) => [...prev, { sender: 'bot', text: `⚠️ Lo siento, hubo un error de conexión con el servidor. Detalle: ${error.message}` }]);
+            setMessages((prev) => [...prev, { sender: 'bot', text: `Lo siento, hubo un error de conexión con el servidor. Detalle: ${error.message}` }]);
         }
     };
     
-    // --- ESTILOS CON COLORES PASTELES APLICADOS ---
+
     const styles = {
         container: {
             position: 'fixed',
@@ -70,7 +64,7 @@ function Chatbot() {
             width: '80px',
             height: '80px',
             borderRadius: '50%',
-            backgroundColor: pastelColors.primary, // Celeste Pastel
+            backgroundColor: pastelColors.primary, 
             color: pastelColors.text,
             border: `2px solid ${pastelColors.secondary}`,
             boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
@@ -86,22 +80,22 @@ function Chatbot() {
         },
         chatWindow: {
             position: 'absolute',
-            bottom: '90px', // Subimos un poco para dar espacio al botón
+            bottom: '90px', 
             right: '0',
             width: '350px', 
-            maxHeight: '450px', // Reducimos un poco la altura máxima
+            maxHeight: '450px', 
             border: `1px solid ${pastelColors.secondary}`,
-            borderRadius: '12px', // Bordes más suaves
+            borderRadius: '12px', 
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             backgroundColor: pastelColors.white,
             overflow: 'hidden',
         },
         chatContent: {
             padding: '15px',
-            backgroundColor: pastelColors.lila, // Lila pastel de fondo
+            backgroundColor: pastelColors.lila, 
             display: 'flex',
             flexDirection: 'column',
-            height: '450px', // Controlamos la altura de la ventana
+            height: '450px', 
         },
         header: {
             margin: '0 0 10px 0',
@@ -111,7 +105,7 @@ function Chatbot() {
             borderBottom: `1px solid ${pastelColors.secondary}`,
         },
         messageList: {
-            flexGrow: 1, // Hace que la lista de mensajes ocupe el espacio restante
+            flexGrow: 1, 
             overflowY: 'scroll', 
             padding: '10px 0', 
             marginBottom: '10px', 
@@ -121,7 +115,7 @@ function Chatbot() {
         messageText: (sender) => ({
             textAlign: sender === 'user' ? 'right' : 'left', 
             margin: '8px 10px', 
-            backgroundColor: sender === 'user' ? pastelColors.accent : pastelColors.botMessage, // Rosa para usuario, gris claro para bot
+            backgroundColor: sender === 'user' ? pastelColors.accent : pastelColors.botMessage, 
             color: pastelColors.text,
             padding: '10px 12px', 
             borderRadius: '20px',
@@ -155,7 +149,7 @@ function Chatbot() {
             padding: '10px 15px', 
             borderRadius: '20px', 
             border: 'none', 
-            backgroundColor: pastelColors.primary, // Celeste Pastel
+            backgroundColor: pastelColors.primary, 
             color: pastelColors.buttonText, 
             cursor: 'pointer',
             fontWeight: 'bold',
@@ -174,7 +168,6 @@ function Chatbot() {
                         <div style={styles.messageList}>
                             {messages.map((msg, index) => (
                                 <p key={index} style={styles.messageText(msg.sender)}>
-                                    {/* Ya no incluimos "Tú:" o "Bot:" para un look más limpio */}
                                     {msg.text}
                                 </p>
                             ))}

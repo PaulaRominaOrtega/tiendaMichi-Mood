@@ -15,7 +15,6 @@ const deleteProductImages = (imageString) => {
       const imagePath = getUploadsPath(imageName);
       if (fs.existsSync(imagePath)) {
         try {
-         
           fs.unlinkSync(imagePath);
         } catch (error) {
           console.error(`Error al eliminar el archivo ${imageName}:`, error);
@@ -25,38 +24,62 @@ const deleteProductImages = (imageString) => {
   }
 };
 
+// obtener productos
 const getProductos = async (req, res) => {
   try {
-    const { page = 1, limit = 10, idCategoria, oferta = undefined, categoria } = req.query; 
-    const offset = (page - 1) * limit;
+    const { 
+      page = 1, 
+      limit = 10, 
+      idCategoria, 
+      oferta, 
+      categoria,
+      q, // búsqueda general
+      precio, // ordena por precio 
+    } = req.query; 
+
+    const pageNumber = parseInt(page, 10) || 1;
+    const limitNumber = parseInt(limit, 10) || 10;
+    const offset = (pageNumber - 1) * limitNumber;
 
     const whereClause = { activo: true };
-    
+    const orderClause = [];
+
+    // filtro busqueda
+    if (q) {
+      whereClause[Op.or] = [
+        { nombre: { [Op.like]: `%${q}%` } },
+        { descripcion: { [Op.like]: `%${q}%` } },
+      ];
+    }
+
+    //filtro categoria
     let categoriaIdFiltrada = idCategoria; 
-
     if (categoria) {
-        // buscamos el ID de la categoría por su nombre
-        const categoriaBuscada = await Categoria.findOne({ 
-            where: { 
-                nombre: categoria, // filtra por el nombre 
-                activa: true 
-            },
-            attributes: ['id']
-        });
-
-        if (categoriaBuscada) {
-            categoriaIdFiltrada = categoriaBuscada.id; 
-        } else {
-            categoriaIdFiltrada = 0; 
-        }
+      const categoriaBuscada = await Categoria.findOne({ 
+        where: { nombre: categoria, activa: true },
+        attributes: ['id']
+      });
+      categoriaIdFiltrada = categoriaBuscada ? categoriaBuscada.id : 0;
     }
-    
-    // alicamos el ID de la categoría
+
     if (categoriaIdFiltrada) {
-        whereClause.idCategoria = categoriaIdFiltrada;
+      whereClause.idCategoria = categoriaIdFiltrada;
     }
 
-    if (oferta !== undefined) whereClause.oferta = oferta === "true";
+    // filtro oferta
+    if (oferta !== undefined) {
+      whereClause.oferta = oferta === "true";
+    }
+
+    // orden
+    if (precio === 'low') {
+      orderClause.push(['precio', 'ASC']); 
+    } else if (precio === 'high') {
+      orderClause.push(['precio', 'DESC']); 
+    }
+
+    // Orden por ID
+    orderClause.push(["id", "DESC"]); 
 
     const productos = await Producto.findAndCountAll({
       where: whereClause,
@@ -64,19 +87,19 @@ const getProductos = async (req, res) => {
         { model: Categoria, as: "categoria", attributes: ["id", "nombre"] },
         { model: Administrador, as: "administrador", attributes: ["id", "usuario", "email"] },
       ],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [["id", "DESC"]],
+      limit: limitNumber,
+      offset,
+      order: orderClause,
     });
 
     res.json({
       success: true,
       data: productos.rows,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(productos.count / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(productos.count / limitNumber),
         totalItems: productos.count,
-        itemsPerPage: parseInt(limit),
+        itemsPerPage: limitNumber,
       },
     });
   } catch (err) {
@@ -88,15 +111,46 @@ const getProductos = async (req, res) => {
     });
   }
 };
+
+const searchProductos = async (req, res) => {
+  try {
+    const { q, limit = 10 } = req.query;
+
+    if (!q || q.length < 2) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const productos = await Producto.findAll({
+      where: {
+        activo: true,
+        [Op.or]: [
+          { nombre: { [Op.like]: `%${q}%` } }, 
+          { descripcion: { [Op.like]: `%${q}%` } },
+        ]
+      },
+      attributes: ['id', 'nombre'], 
+      limit: parseInt(limit, 10),
+      order: [['nombre', 'ASC']],
+    });
+
+    res.json({ success: true, data: productos });
+  } catch (err) {
+    console.error("Error en searchProductos:", err.message);
+    res.status(500).json({
+      success: false,
+      error: "Error interno del servidor",
+      message: "No se pudo realizar la búsqueda rápida",
+    });
+  }
+};
+
+// obtener productos
 const getProducto = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "ID de producto inválido",
-      });
+      return res.status(400).json({ success: false, error: "ID de producto inválido" });
     }
 
     const producto = await Producto.findOne({
@@ -108,16 +162,10 @@ const getProducto = async (req, res) => {
     });
 
     if (!producto) {
-      return res.status(404).json({
-        success: false,
-        error: "Producto no encontrado",
-      });
+      return res.status(404).json({ success: false, error: "Producto no encontrado" });
     }
 
-    res.json({
-      success: true,
-      data: producto,
-    });
+    res.json({ success: true, data: producto });
   } catch (err) {
     console.error("Error en getProducto:", err);
     res.status(500).json({
@@ -128,6 +176,7 @@ const getProducto = async (req, res) => {
   }
 };
 
+// crear producto
 const createProducto = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -140,17 +189,8 @@ const createProducto = async (req, res) => {
     }
 
     const {
-      nombre,
-      precio,
-      descripcion,
-      stock,
-      oferta,
-      descuento,
-      idAdministrador,
-      idCategoria,
-      material,
-      capacidad,
-      caracteristicas_especiales
+      nombre, precio, descripcion, stock, oferta, descuento,
+      idAdministrador, idCategoria, material, capacidad, caracteristicas_especiales
     } = req.body;
 
     const imagenes = req.files && req.files.length > 0
@@ -193,15 +233,13 @@ const createProducto = async (req, res) => {
   }
 };
 
+// actualizar productos
 const updateProducto = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "ID de producto inválido",
-      });
+      return res.status(400).json({ success: false, error: "ID de producto inválido" });
     }
 
     const errors = validationResult(req);
@@ -215,40 +253,26 @@ const updateProducto = async (req, res) => {
 
     const producto = await Producto.findByPk(id);
     if (!producto || !producto.activo) {
-      return res.status(404).json({
-        success: false,
-        error: "Producto no encontrado",
-      });
+      return res.status(404).json({ success: false, error: "Producto no encontrado" });
     }
+
     let datosActualizados = { ...req.body };
 
-    // manejo de imágenes
     if (req.files && req.files.length > 0) {
       deleteProductImages(producto.imagen);
-
-      //crea el string con los nuevos nombres de archivo
       const nuevosImagenesString = req.files.map(file => file.filename).join(',');
       datosActualizados.imagen = nuevosImagenesString;
-
     } else if (datosActualizados.hasOwnProperty('imagen') && datosActualizados.imagen === null) {
       deleteProductImages(producto.imagen);
       datosActualizados.imagen = null;
     }
 
-    if (datosActualizados.precio) {
-      datosActualizados.precio = parseFloat(datosActualizados.precio);
-    }
-    if (datosActualizados.stock) {
-      datosActualizados.stock = parseInt(datosActualizados.stock, 10);
-    }
+    if (datosActualizados.precio) datosActualizados.precio = parseFloat(datosActualizados.precio);
+    if (datosActualizados.stock) datosActualizados.stock = parseInt(datosActualizados.stock, 10);
 
     await producto.update(datosActualizados);
 
-    res.json({
-      success: true,
-      data: producto,
-      message: "Producto actualizado exitosamente",
-    });
+    res.json({ success: true, data: producto, message: "Producto actualizado exitosamente" });
   } catch (err) {
     console.error("Error en updateProducto:", err);
     res.status(500).json({
@@ -259,35 +283,24 @@ const updateProducto = async (req, res) => {
   }
 };
 
+// eliminar producto
 const deleteProducto = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: "ID de producto inválido",
-      });
+      return res.status(400).json({ success: false, error: "ID de producto inválido" });
     }
 
     const producto = await Producto.findByPk(id);
     if (!producto || !producto.activo) {
-      return res.status(404).json({
-        success: false,
-        error: "Producto no encontrado",
-      });
+      return res.status(404).json({ success: false, error: "Producto no encontrado" });
     }
 
-    // Eliminar todas las imágenes físicas del servidor
     deleteProductImages(producto.imagen);
-
-    // Marcar como inactivo
     await producto.update({ activo: false });
 
-    res.json({
-      success: true,
-      message: "Producto eliminado exitosamente (soft delete)",
-    });
+    res.json({ success: true, message: "Producto eliminado exitosamente (soft delete)" });
   } catch (err) {
     console.error("Error en deleteProducto:", err);
     res.status(500).json({
@@ -304,4 +317,5 @@ module.exports = {
   createProducto, 
   updateProducto,
   deleteProducto,
+  searchProductos,
 };

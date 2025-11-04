@@ -1,4 +1,3 @@
-// src/middleware/authAdmin.js (Renombré el archivo para que sea más claro)
 const jwt = require('jsonwebtoken');
 const Administrador = require('../models/administrador.model');
 

@@ -85,7 +85,7 @@ const getPedidoProductoById = async (req, res) => {
     }
 };
 
-// Crear un nuevo pedido-producto
+// Crear un nuevo pedido producto
 const createPedidoProducto = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -121,7 +121,7 @@ const createPedidoProducto = async (req, res) => {
     }
 };
 
-// Actualizar un pedido-producto
+// Actualizar un pedido producto
 const updatePedidoProducto = async (req, res) => {
     try {
         const { id } = req.params;
@@ -160,7 +160,7 @@ const updatePedidoProducto = async (req, res) => {
     }
 };
 
-// Eliminar un pedido-producto
+// Eliminar un pedido producto
 const deletePedidoProducto = async (req, res) => {
     try {
         const { id } = req.params;

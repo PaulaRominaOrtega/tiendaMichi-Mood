@@ -11,7 +11,6 @@ const Envio = require("./envio.model");
 const Pago = require("./pago.model");
 const Pedido = require("./pedido.model");
 const PedidoProducto = require("./pedidoProducto.model");
-const Variante = require("./variante.model");
 const CuponDescuento = require("./cuponDescuento.model");
 
 
@@ -114,5 +113,4 @@ module.exports = {
   PedidoProducto,
   Producto,
   CuponDescuento,
-  Variante,
 };
